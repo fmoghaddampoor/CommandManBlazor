@@ -1,0 +1,33 @@
+@using CommandMan.Web.Services
+@inject ProgressService ProgressState
+@implements IDisposable
+
+@if (ProgressState.IsVisible)
+{
+    <div class="progress-overlay">
+        <div class="progress-card">
+            <h3 class="progress-title">@ProgressState.Title</h3>
+            
+            <div class="progress-container">
+                <div class="progress-bar" style="width: @(ProgressState.Progress)%"></div>
+            </div>
+            
+            <div class="progress-stats">
+                <span>@(Math.Round(ProgressState.Progress, 1))%</span>
+                <span>@ProgressState.Message</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        ProgressState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ProgressState.OnChange -= StateHasChanged;
+    }
+}

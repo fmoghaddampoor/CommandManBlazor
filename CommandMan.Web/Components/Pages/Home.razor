@@ -4,11 +4,17 @@
 @using CommandMan.Core.Entities
 @using CommandMan.Core.Interfaces
 @inject AppState AppState
+@inject ProgressService ProgressState
+@inject IJSRuntime JS
+@inject IFileSystemService FileService
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
+@inject NavigationManager Navigation
 @implements IAsyncDisposable
 
 <PageTitle>CommandMan</PageTitle>
 
 <div class="main-container">
+    <ProgressOverlay />
     <!-- Optional Top Toolbar or Menu could go here -->
     
     <div class="panels-container">
@@ -32,14 +38,14 @@
         <input type="text" class="cmd-input" />
     </div>
     
-    <div class="app-footer">
-        <div class="f-key-btn">F3 View</div>
-        <div class="f-key-btn">F4 Edit</div>
-        <div class="f-key-btn">F5 Copy</div>
-        <div class="f-key-btn">F6 Move</div>
-        <div class="f-key-btn">F7 MkDir</div>
-        <div class="f-key-btn">F8 Delete</div>
-        <div class="f-key-btn">Alt+F4 Exit</div>
+    <div class="app-footer" style="z-index: 1000;">
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.View)">F3 View</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Edit)">F4 Edit</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Copy)">F5 Copy</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Move)">F6 Move</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.MkDir)">F7 MkDir</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Delete)">F8 Delete</div>
+        <div class="f-key-btn" @onclick="Exit">Alt+F4 Exit</div>
     </div>
 </div>
 
@@ -77,7 +83,7 @@
     private string ModalInputValue = "";
     private ActionType ModalAction;
     
-    private enum ActionType { None, MkDir, Copy, Move, Delete }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete }
 
     protected override void OnInitialized()
     {
@@ -203,18 +209,65 @@
             case "Enter":
                 await HandleEnter();
                 break;
+            case "F3":
+                await TriggerAction(ActionType.View);
+                break;
+            case "F4":
+                await TriggerAction(ActionType.Edit);
+                break;
             case "F5":
-                OpenModal(ActionType.Copy);
+                await TriggerAction(ActionType.Copy);
                 break;
             case "F6":
-                OpenModal(ActionType.Move);
+                await TriggerAction(ActionType.Move);
                 break;
             case "F7":
-                OpenModal(ActionType.MkDir);
+                await TriggerAction(ActionType.MkDir);
                 break;
             case "F8":
-                OpenModal(ActionType.Delete);
+                await TriggerAction(ActionType.Delete);
                 break;
+        }
+    }
+
+    private async Task TriggerAction(ActionType action)
+    {
+        var passive = AppState.ActivePanel == AppState.LeftPanel ? AppState.RightPanel : AppState.LeftPanel;
+        
+        switch (action)
+        {
+            case ActionType.View:
+                // TODO: Implement View
+                break;
+            case ActionType.Edit:
+                await HandleEdit();
+                break;
+            case ActionType.Copy:
+            case ActionType.Move:
+                // Automate: Destination is always the other panel
+                ModalAction = action;
+                ModalInputValue = passive.CurrentPath;
+                await SubmitModal();
+                break;
+            case ActionType.MkDir:
+            case ActionType.Delete:
+                OpenModal(action);
+                break;
+        }
+    }
+
+    private void Exit()
+    {
+        // For web apps, we can't really "Exit" the process, but we can redirect or show a message
+        Navigation.NavigateTo("about:blank");
+    }
+
+    private async Task HandleEdit()
+    {
+        var item = AppState.ActivePanel.SelectedItem;
+        if (item is FileItem)
+        {
+            await FileService.OpenFileAsync(item.FullPath);
         }
     }
     
@@ -259,60 +312,87 @@
         try 
         {
             var active = AppState.ActivePanel;
-            var sourcePath = active.SelectedItem?.FullPath;
-            var currentPath = active.CurrentPath;
+            var targetPanel = active == AppState.LeftPanel ? AppState.RightPanel : AppState.LeftPanel;
+            var selectedItems = active.SelectedItems.ToList();
             
+            // Add current focused item if not in selection
+            if (active.SelectedItem != null && !selectedItems.Contains(active.SelectedItem))
+            {
+                selectedItems.Add(active.SelectedItem);
+            }
+
+            if (selectedItems.Count == 0 && ModalAction != ActionType.MkDir)
+            {
+                CloseModal();
+                return;
+            }
+
+            CloseModal();
+
             switch (ModalAction)
             {
                 case ActionType.MkDir:
                     if (!string.IsNullOrWhiteSpace(ModalInputValue))
                     {
-                        var newPath = System.IO.Path.Combine(currentPath, ModalInputValue);
+                        var newPath = System.IO.Path.Combine(active.CurrentPath, ModalInputValue);
                         await FileService.CreateDirectoryAsync(newPath);
+                        await ReloadPanel(active);
                     }
                     break;
-                case ActionType.Delete:
-                    if (sourcePath != null)
-                    {
-                        await FileService.DeleteItemAsync(sourcePath);
-                    }
-                    break;
+
                 case ActionType.Copy:
-                    if (sourcePath != null && !string.IsNullOrWhiteSpace(ModalInputValue))
-                    {
-                         // Provide full target path (directory + filename) or just directory
-                         // Simple logic: if target is directory, copy into it.
-                         // My service CopyItemAsync(source, dest)
-                         // For MVP I probably need to construct the full path
-                         var targetDir = ModalInputValue;
-                         var targetPath = System.IO.Path.Combine(targetDir, active.SelectedItem!.Name);
-                         await FileService.CopyItemAsync(sourcePath, targetPath);
-                    }
-                    break;
                 case ActionType.Move:
-                    if (sourcePath != null && !string.IsNullOrWhiteSpace(ModalInputValue))
+                    ProgressState.Start(ModalAction == ActionType.Copy ? "Copying..." : "Moving...");
+                    int idx = 0;
+                    foreach (var item in selectedItems)
                     {
-                         var targetDir = ModalInputValue;
-                         var targetPath = System.IO.Path.Combine(targetDir, active.SelectedItem!.Name);
-                         await FileService.MoveItemAsync(sourcePath, targetPath);
+                        idx++;
+                        var progressValue = (double)idx / selectedItems.Count * 100;
+                        ProgressState.Update(progressValue, $"Processing: {item.Name}");
+                        
+                        var dest = System.IO.Path.Combine(ModalInputValue, item.Name);
+                        
+                        // User requested: "check if those folder or files does not exist move"
+                        // I'll skip if exists to be safe as per request
+                        if (!await FileService.ExistsAsync(dest))
+                        {
+                            if (ModalAction == ActionType.Copy)
+                                await FileService.CopyItemAsync(item.FullPath, dest);
+                            else
+                                await FileService.MoveItemAsync(item.FullPath, dest);
+                        }
                     }
+                    ProgressState.Stop();
+                    await ReloadPanel(active);
+                    await ReloadPanel(targetPanel);
+                    break;
+
+                case ActionType.Delete:
+                    ProgressState.Start("Deleting...");
+                    int dIdx = 0;
+                    foreach (var item in selectedItems)
+                    {
+                        dIdx++;
+                        var progressValue = (double)dIdx / selectedItems.Count * 100;
+                        ProgressState.Update(progressValue, $"Deleting: {item.Name}");
+                        await FileService.DeleteItemAsync(item.FullPath);
+                    }
+                    ProgressState.Stop();
+                    await ReloadPanel(active);
                     break;
             }
-            
-            // Refresh Both Panels
-            AppState.LeftPanel.Items = await FileService.GetDirectoryContentAsync(AppState.LeftPanel.CurrentPath);
-            AppState.RightPanel.Items = await FileService.GetDirectoryContentAsync(AppState.RightPanel.CurrentPath);
-            AppState.LeftPanel.NotifyStateChanged();
-            AppState.RightPanel.NotifyStateChanged();
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error: " + ex.Message);
+            ProgressState.Stop();
+            Console.WriteLine($"Error: {ex.Message}");
         }
-        finally
-        {
-            CloseModal();
-        }
+    }
+
+    private async Task ReloadPanel(PanelState panel)
+    {
+        panel.Items = await FileService.GetDirectoryContentAsync(panel.CurrentPath);
+        panel.NotifyStateChanged();
     }
 
     private async Task HandleEnter()

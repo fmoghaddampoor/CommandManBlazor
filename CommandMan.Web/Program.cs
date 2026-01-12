@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<IFileSystemService, LocalFileSystemService>();
 builder.Services.AddScoped<CommandMan.Web.Services.AppState>();
+builder.Services.AddScoped<CommandMan.Web.Services.ProgressService>();
 
 var app = builder.Build();
 

@@ -11,8 +11,9 @@ namespace CommandMan.Core.Interfaces
         Task<bool> ExistsAsync(string path);
         Task CreateDirectoryAsync(string path);
         Task DeleteItemAsync(string path);
-        Task CopyItemAsync(string sourcePath, string destPath);
-        Task MoveItemAsync(string sourcePath, string destPath);
+        Task CopyItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
+        Task MoveItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
+        Task OpenFileAsync(string path);
         string GetParentPath(string path);
     }
 }

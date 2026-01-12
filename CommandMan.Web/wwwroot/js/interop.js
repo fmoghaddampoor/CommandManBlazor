@@ -1,8 +1,10 @@
 window.registerKeyboardHandler = (dotNetHelper) => {
     window.commandManKeyHandler = (e) => {
-        // Prevent default for specific keys
-        const blockedKeys = ["F3", "F4", "F5", "F6", "F7", "F8", "ArrowUp", "ArrowDown", "Tab", "Enter"];
-        if (blockedKeys.includes(e.key)) {
+        // Blocks F-keys (F1-F12), ArrowUp, ArrowDown, Tab, Enter
+        const isFKey = /^F[1-9][0-2]?$/.test(e.key);
+        const commandKeys = ["ArrowUp", "ArrowDown", "Tab", "Enter"];
+
+        if (isFKey || commandKeys.includes(e.key)) {
             e.preventDefault();
             dotNetHelper.invokeMethodAsync('HandleKeyDown', {
                 key: e.key,
