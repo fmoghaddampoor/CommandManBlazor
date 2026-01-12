@@ -1,0 +1,31 @@
+@using CommandMan.Core.Entities
+@using CommandMan.Core.Interfaces
+@inject IFileSystemService FileService
+
+<div class="drive-picker">
+    @foreach (var drive in Drives)
+    {
+        <button class="drive-btn" @onclick="() => SelectDrive(drive)">
+             @drive.Name
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnDriveSelected { get; set; }
+    
+    private List<FileSystemItem> Drives = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Drives = await FileService.GetDrivesAsync();
+    }
+
+    private async Task SelectDrive(FileSystemItem drive)
+    {
+        if (OnDriveSelected.HasDelegate)
+        {
+            await OnDriveSelected.InvokeAsync(drive.FullPath);
+        }
+    }
+}

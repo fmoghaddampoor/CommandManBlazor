@@ -1,0 +1,349 @@
+﻿@page "/"
+@using CommandMan.Web.Services
+@using CommandMan.Web.Components
+@using CommandMan.Core.Entities
+@using CommandMan.Core.Interfaces
+@inject AppState AppState
+@implements IAsyncDisposable
+
+<PageTitle>CommandMan</PageTitle>
+
+<div class="tc-container">
+    <div class="tc-toolbar">
+       <span class="toolbar-btn">Ref</span>
+       <span class="toolbar-btn">Net</span>
+    </div>
+    
+    <div class="tc-panels">
+        <div class="panel-wrapper left-panel">
+            <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.LeftPanel, path))" />
+            <FilePanel State="@AppState.LeftPanel" 
+                       IsActive="@(AppState.ActivePanel == AppState.LeftPanel)" 
+                       OnActivate="@(() => Activate(AppState.LeftPanel))" />
+        </div>
+        <div class="tc-splitter"></div>
+        <div class="panel-wrapper right-panel">
+             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
+            <FilePanel State="@AppState.RightPanel" 
+                       IsActive="@(AppState.ActivePanel == AppState.RightPanel)" 
+                       OnActivate="@(() => Activate(AppState.RightPanel))" />
+        </div>
+    </div>
+    
+    <div class="tc-cmdline">
+        <span class="cmd-prompt">@AppState.ActivePanel.CurrentPath&gt;</span>
+        <input type="text" class="cmd-input" />
+    </div>
+    
+    <div class="tc-footer">
+        <div class="f-key">F3 View</div>
+        <div class="f-key">F4 Edit</div>
+        <div class="f-key">F5 Copy</div>
+        <div class="f-key">F6 Move</div>
+        <div class="f-key">F7 MkDir</div>
+        <div class="f-key">F8 Delete</div>
+        <div class="f-key">Alt+F4 Exit</div>
+    </div>
+</div>
+
+@if (IsModalVisible)
+{
+    <div class="modal-overlay">
+        <div class="modal-box">
+             <div class="modal-title">@ModalTitle</div>
+             @if (ModalAction != ActionType.Delete) 
+             {
+                 <input @bind="ModalInputValue" id="modalInput" autofocus />
+             }
+             else
+             {
+                 <p style="color:black">Are you sure you want to delete @AppState.ActivePanel.SelectedItem?.Name ?</p>
+             }
+             <div class="modal-buttons">
+                 <button @onclick="SubmitModal">OK</button>
+                 <button @onclick="CloseModal">Cancel</button>
+             </div>
+        </div>
+    </div>
+}
+
+@inject IJSRuntime JS
+@inject IFileSystemService FileService
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
+
+@code {
+    private DotNetObjectReference<Home>? dotNetHelper;
+    
+    // Modal State
+    private bool IsModalVisible = false;
+    private string ModalTitle = "";
+    private string ModalInputValue = "";
+    private ActionType ModalAction;
+    
+    private enum ActionType { None, MkDir, Copy, Move, Delete }
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                dotNetHelper = DotNetObjectReference.Create(this);
+                try { await JS.InvokeVoidAsync("registerKeyboardHandler", dotNetHelper); } catch {}
+                
+                // Load state or Defaults
+                await LoadState();
+            }
+            if (IsModalVisible)
+            {
+                 // Try to focus input
+                 try { await JS.InvokeVoidAsync("eval", "document.getElementById('modalInput')?.focus()"); } catch {}
+            }
+        }
+        catch 
+        {
+            // Logging removed
+        }
+    }
+    
+    private async Task LoadState()
+    {
+        // Try load from local storage
+        string leftPath = "";
+        string rightPath = "";
+
+        try 
+        {
+            var leftRes = await LocalStorage.GetAsync<string>("LeftPanelPath");
+            if (leftRes.Success) leftPath = leftRes.Value ?? "";
+            
+            var rightRes = await LocalStorage.GetAsync<string>("RightPanelPath");
+            if (rightRes.Success) rightPath = rightRes.Value ?? "";
+        }
+        catch (Exception ex)
+        { 
+            // Storage might be unavailable
+        } 
+
+        if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
+        {
+             // Default to first available drive
+             var drives = await FileService.GetDrivesAsync();
+             var defaultDrive = drives.FirstOrDefault()?.FullPath ?? "";
+             if (string.IsNullOrEmpty(leftPath)) leftPath = defaultDrive;
+             if (string.IsNullOrEmpty(rightPath)) rightPath = defaultDrive;
+        }
+
+        // Apply
+        await SetPanelPath(AppState.LeftPanel, leftPath, save: false);
+        await SetPanelPath(AppState.RightPanel, rightPath, save: false);
+        StateHasChanged();
+    }
+    
+    private async Task SetPanelPath(PanelState panel, string path, bool save = true)
+    {
+        panel.CurrentPath = path;
+        panel.Items = await FileService.GetDirectoryContentAsync(path);
+        // Select first item if possible? No, keep selection null or default
+        panel.SelectedItem = panel.Items.FirstOrDefault(); // Optional: select first
+        panel.NotifyStateChanged();
+        
+        if (save)
+        {
+            try
+            {
+                if (panel == AppState.LeftPanel)
+                     await LocalStorage.SetAsync("LeftPanelPath", path);
+                else
+                     await LocalStorage.SetAsync("RightPanelPath", path);
+            }
+            catch {}
+        }
+    }
+
+    private void Activate(PanelState panel)
+    {
+        AppState.SetActivePanel(panel);
+    }
+
+    [JSInvokable]
+    public async Task HandleKeyDown(string key)
+    {
+        if (IsModalVisible)
+        {
+            if (key == "Enter") await SubmitModal();
+            // Esc is not captured by global handler generally unless added to list, but if we did, handle it:
+            // if (key == "Escape") CloseModal();
+            return;
+        }
+
+        switch (key)
+        {
+            case "ArrowUp":
+                AppState.ActivePanel.MoveSelection(-1);
+                break;
+            case "ArrowDown":
+                AppState.ActivePanel.MoveSelection(1);
+                break;
+            case "Tab":
+                if (AppState.ActivePanel == AppState.LeftPanel)
+                    AppState.SetActivePanel(AppState.RightPanel);
+                else
+                    AppState.SetActivePanel(AppState.LeftPanel);
+                break;
+            case "Enter":
+                await HandleEnter();
+                break;
+            case "F5":
+                OpenModal(ActionType.Copy);
+                break;
+            case "F6":
+                OpenModal(ActionType.Move);
+                break;
+            case "F7":
+                OpenModal(ActionType.MkDir);
+                break;
+            case "F8":
+                OpenModal(ActionType.Delete);
+                break;
+        }
+    }
+    
+    private void OpenModal(ActionType action)
+    {
+        ModalAction = action;
+        IsModalVisible = true;
+        
+        var passive = AppState.ActivePanel == AppState.LeftPanel ? AppState.RightPanel : AppState.LeftPanel;
+        var selectedName = AppState.ActivePanel.SelectedItem?.Name ?? "";
+
+        switch (action)
+        {
+            case ActionType.MkDir:
+                ModalTitle = "Create Directory";
+                ModalInputValue = "";
+                break;
+            case ActionType.Copy:
+                ModalTitle = "Copy " + selectedName + " to:";
+                ModalInputValue = passive.CurrentPath; // Default to target panel
+                break;
+            case ActionType.Move:
+                ModalTitle = "Move " + selectedName + " to:";
+                ModalInputValue = passive.CurrentPath;
+                break;
+            case ActionType.Delete:
+                ModalTitle = "Delete";
+                break;
+        }
+        StateHasChanged();
+    }
+    
+    private void CloseModal()
+    {
+        IsModalVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task SubmitModal()
+    {
+        try 
+        {
+            var active = AppState.ActivePanel;
+            var sourcePath = active.SelectedItem?.FullPath;
+            var currentPath = active.CurrentPath;
+            
+            switch (ModalAction)
+            {
+                case ActionType.MkDir:
+                    if (!string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                        var newPath = System.IO.Path.Combine(currentPath, ModalInputValue);
+                        await FileService.CreateDirectoryAsync(newPath);
+                    }
+                    break;
+                case ActionType.Delete:
+                    if (sourcePath != null)
+                    {
+                        await FileService.DeleteItemAsync(sourcePath);
+                    }
+                    break;
+                case ActionType.Copy:
+                    if (sourcePath != null && !string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                         // Provide full target path (directory + filename) or just directory
+                         // Simple logic: if target is directory, copy into it.
+                         // My service CopyItemAsync(source, dest)
+                         // For MVP I probably need to construct the full path
+                         var targetDir = ModalInputValue;
+                         var targetPath = System.IO.Path.Combine(targetDir, active.SelectedItem!.Name);
+                         await FileService.CopyItemAsync(sourcePath, targetPath);
+                    }
+                    break;
+                case ActionType.Move:
+                    if (sourcePath != null && !string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                         var targetDir = ModalInputValue;
+                         var targetPath = System.IO.Path.Combine(targetDir, active.SelectedItem!.Name);
+                         await FileService.MoveItemAsync(sourcePath, targetPath);
+                    }
+                    break;
+            }
+            
+            // Refresh Both Panels
+            AppState.LeftPanel.Items = await FileService.GetDirectoryContentAsync(AppState.LeftPanel.CurrentPath);
+            AppState.RightPanel.Items = await FileService.GetDirectoryContentAsync(AppState.RightPanel.CurrentPath);
+            AppState.LeftPanel.NotifyStateChanged();
+            AppState.RightPanel.NotifyStateChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+        finally
+        {
+            CloseModal();
+        }
+    }
+
+    private async Task HandleEnter()
+    {
+        var item = AppState.ActivePanel.SelectedItem;
+        if (item is DirectoryItem dir)
+        {
+            AppState.ActivePanel.CurrentPath = dir.FullPath;
+             AppState.ActivePanel.Items = await FileService.GetDirectoryContentAsync(AppState.ActivePanel.CurrentPath);
+             AppState.ActivePanel.SelectedItem = null; // Reset selection
+             AppState.ActivePanel.NotifyStateChanged();
+        }
+    }
+
+    private async Task HandleMkDir()
+    {
+        // Replaced by Modal
+    }
+
+    private async Task HandleDelete()
+    {
+         // Replaced by Modal
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        AppState.OnChange -= StateHasChanged;
+        if (dotNetHelper != null)
+        {
+            try 
+            {
+                await JS.InvokeVoidAsync("unregisterKeyboardHandler");
+            } 
+            catch {} 
+            dotNetHelper.Dispose();
+        }
+    }
+}
+

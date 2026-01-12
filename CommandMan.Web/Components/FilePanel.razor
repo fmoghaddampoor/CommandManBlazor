@@ -1,0 +1,136 @@
+@using CommandMan.Core.Entities
+@using CommandMan.Core.Interfaces
+@using CommandMan.Web.Services
+@inject IFileSystemService FileService
+
+<div class="file-panel @(IsActive ? "active" : "")" @onclick="ActivatePanel">
+    <div class="panel-header">
+        <span class="current-path">@State.CurrentPath</span>
+    </div>
+    <div class="file-list">
+        <table class="table table-sm table-hover file-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Ext</th>
+                    <th>Size</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (State.CurrentPath != ParemptPath && !string.IsNullOrEmpty(State.CurrentPath))
+                {
+                     <tr @ondblclick="GoUp">
+                        <td>[..]</td>
+                        <td></td>
+                        <td>&lt;DIR&gt;</td>
+                        <td></td>
+                    </tr>
+                }
+                @foreach (var item in State.Items)
+                {
+                    <tr class="@(item == State.SelectedItem ? "selected" : "")" 
+                        @onclick="() => SelectItem(item)"
+                        @ondblclick="() => OpenItem(item)">
+                        <td>
+                            @if (item is DirectoryItem)
+                            {
+                                <span>[@item.Name]</span>
+                            }
+                            else
+                            {
+                                <span>@item.Name</span>
+                            }
+                        </td>
+                        <td>@item.Extension</td>
+                        <td>@(item is FileItem f ? FormatSize(f.FileSize) : "<DIR>")</td>
+                        <td>@item.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="panel-footer">
+        @State.Items.Count items
+    </div>
+</div>
+
+@code {
+    [Parameter] public PanelState State { get; set; } = null!;
+    [Parameter] public bool IsActive { get; set; }
+    [Parameter] public EventCallback OnActivate { get; set; }
+
+    private string ParemptPath => ""; // simplified
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(State.CurrentPath))
+        {
+             // Default start
+             State.CurrentPath = ""; // Root drives
+        }
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        State.Items = await FileService.GetDirectoryContentAsync(State.CurrentPath);
+        State.NotifyStateChanged();
+    }
+
+    private async Task OpenItem(FileSystemItem item)
+    {
+        if (item is DirectoryItem dir)
+        {
+            State.CurrentPath = dir.FullPath;
+            await LoadData();
+        }
+        // TODO: Handle file execution
+    }
+
+    private async Task GoUp()
+    {
+        var parent = FileService.GetParentPath(State.CurrentPath);
+         // If parent is empty but current path was not empty, it means we go to drives.
+         // If current path is root drive (e.g. C:\), GetParent might handle it or we set to empty.
+         if (string.IsNullOrEmpty(parent) && !string.IsNullOrEmpty(State.CurrentPath))
+         {
+             // Check if we are at drive root, if so go to empty (drives list)
+             // Simplified logic for now: IFileSystemService GetParentPath should handle logic, 
+             // but let's assume empty string is root of roots.
+             State.CurrentPath = "";
+         }
+         else
+         {
+             State.CurrentPath = parent;
+         }
+         await LoadData();
+    }
+
+    private void SelectItem(FileSystemItem item)
+    {
+        State.SelectedItem = item;
+        ActivatePanel(); // Converting click to selection also activates
+    }
+    
+    private void ActivatePanel()
+    {
+        if (!IsActive)
+        {
+            OnActivate.InvokeAsync();
+        }
+    }
+
+    private string FormatSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}
