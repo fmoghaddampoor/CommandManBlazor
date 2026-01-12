@@ -87,6 +87,7 @@ body {
     transition: all 0.2s;
     cursor: pointer;
     min-height: 0;
+    user-select: none;
 }
 
 .file-panel.active {

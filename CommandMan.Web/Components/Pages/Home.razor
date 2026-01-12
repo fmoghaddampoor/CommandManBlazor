@@ -170,27 +170,31 @@
         AppState.SetActivePanel(panel);
     }
 
+    public class KeyEventArgs {
+        public string Key { get; set; } = "";
+        public bool ShiftKey { get; set; }
+        public bool CtrlKey { get; set; }
+        public bool AltKey { get; set; }
+    }
+
     [JSInvokable]
-    public async Task HandleKeyDown(string key)
+    public async Task HandleKeyDown(KeyEventArgs e)
     {
         if (IsModalVisible)
         {
-            if (key == "Enter") await SubmitModal();
-            // Esc is not captured by global handler generally unless added to list, but if we did, handle it:
-            // if (key == "Escape") CloseModal();
+            if (e.Key == "Enter") await SubmitModal();
             return;
         }
 
-        switch (key)
+        switch (e.Key)
         {
             case "ArrowUp":
-                AppState.ActivePanel.MoveSelection(-1);
+                AppState.ActivePanel.MoveSelection(-1, range: e.ShiftKey);
                 break;
             case "ArrowDown":
-                AppState.ActivePanel.MoveSelection(1);
+                AppState.ActivePanel.MoveSelection(1, range: e.ShiftKey);
                 break;
             case "Tab":
-                Console.WriteLine("Tab pressed. Toggling panel.");
                 if (AppState.ActivePanel == AppState.LeftPanel)
                     AppState.SetActivePanel(AppState.RightPanel);
                 else
@@ -220,7 +224,8 @@
         IsModalVisible = true;
         
         var passive = AppState.ActivePanel == AppState.LeftPanel ? AppState.RightPanel : AppState.LeftPanel;
-        var selectedName = AppState.ActivePanel.SelectedItem?.Name ?? "";
+        var selectedCount = AppState.ActivePanel.SelectedItems.Count;
+        var selectedName = selectedCount > 1 ? $"{selectedCount} items" : (AppState.ActivePanel.SelectedItem?.Name ?? "");
 
         switch (action)
         {
@@ -237,7 +242,7 @@
                 ModalInputValue = passive.CurrentPath;
                 break;
             case ActionType.Delete:
-                ModalTitle = "Delete";
+                ModalTitle = "Delete " + selectedName;
                 break;
         }
         StateHasChanged();

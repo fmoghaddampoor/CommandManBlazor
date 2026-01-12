@@ -30,8 +30,8 @@
                 }
                 @foreach (var item in State.Items)
                 {
-                    <tr class="@(item == State.SelectedItem ? "selected" : "")" 
-                        @onclick="() => SelectItem(item)"
+                    <tr class="@(State.SelectedItems.Contains(item) ? "selected" : "")" 
+                        @onclick="(e) => SelectItem(e, item)"
                         @ondblclick="() => OpenItem(item)">
                         <td>
                             <i class="@GetIconClass(item)" style="margin-right:8px;"></i>
@@ -109,10 +109,10 @@
          await LoadData();
     }
 
-    private void SelectItem(FileSystemItem item)
+    private void SelectItem(MouseEventArgs e, FileSystemItem item)
     {
-        State.SelectedItem = item;
-        ActivatePanel(); // Converting click to selection also activates
+        State.SelectItem(item, toggle: e.CtrlKey, range: e.ShiftKey);
+        ActivatePanel(); 
     }
     
     private void ActivatePanel()

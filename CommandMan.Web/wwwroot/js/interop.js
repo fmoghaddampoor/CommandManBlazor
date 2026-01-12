@@ -4,7 +4,12 @@ window.registerKeyboardHandler = (dotNetHelper) => {
         const blockedKeys = ["F3", "F4", "F5", "F6", "F7", "F8", "ArrowUp", "ArrowDown", "Tab", "Enter"];
         if (blockedKeys.includes(e.key)) {
             e.preventDefault();
-            dotNetHelper.invokeMethodAsync('HandleKeyDown', e.key);
+            dotNetHelper.invokeMethodAsync('HandleKeyDown', {
+                key: e.key,
+                shiftKey: e.shiftKey,
+                ctrlKey: e.ctrlKey,
+                altKey: e.altKey
+            });
         }
     };
     window.addEventListener('keydown', window.commandManKeyHandler);

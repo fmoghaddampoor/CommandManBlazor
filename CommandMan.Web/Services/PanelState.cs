@@ -8,39 +8,91 @@ namespace CommandMan.Web.Services
     {
         public string CurrentPath { get; set; } = string.Empty;
         public List<FileSystemItem> Items { get; set; } = new();
-        public FileSystemItem? SelectedItem { get; set; }
+        public HashSet<FileSystemItem> SelectedItems { get; set; } = new();
+        public FileSystemItem? SelectedItem { get; set; } // The "active" item/cursor
+        private FileSystemItem? _pivotItem; // Shift-click start point
         
         public event Action? OnChange;
 
         public void NotifyStateChanged() => OnChange?.Invoke();
 
-        public void MoveSelection(int steps)
+        public void SelectItem(FileSystemItem? item, bool clearExisting = true, bool toggle = false, bool range = false)
         {
-            if (Items.Count == 0) return;
-            
-            // If nothing selected, select first
-            if (SelectedItem == null)
+            if (item == null)
             {
-                SelectedItem = Items[0];
+                SelectedItems.Clear();
+                SelectedItem = null;
+                _pivotItem = null;
                 NotifyStateChanged();
                 return;
             }
 
-            int index = Items.IndexOf(SelectedItem);
-            // If selected item not found (souldn't happen), select first
+            if (range && _pivotItem != null && Items.Contains(_pivotItem))
+            {
+                int start = Items.IndexOf(_pivotItem);
+                int end = Items.IndexOf(item);
+                if (start > end) { int t = start; start = end; end = t; }
+                
+                SelectedItems.Clear();
+                for (int i = start; i <= end; i++)
+                {
+                    SelectedItems.Add(Items[i]);
+                }
+            }
+            else if (toggle)
+            {
+                if (SelectedItems.Contains(item))
+                    SelectedItems.Remove(item);
+                else
+                    SelectedItems.Add(item);
+                
+                _pivotItem = item;
+            }
+            else
+            {
+                if (clearExisting)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(item);
+                }
+                else
+                {
+                    SelectedItems.Add(item);
+                }
+                _pivotItem = item;
+            }
+
+            SelectedItem = item;
+            NotifyStateChanged();
+        }
+
+        public void MoveSelection(int steps, bool range = false)
+        {
+            if (Items.Count == 0) return;
+            
+            int index = SelectedItem != null ? Items.IndexOf(SelectedItem) : -1;
+            
             if (index == -1) 
             {
-                SelectedItem = Items[0];
-                NotifyStateChanged();
+                SelectItem(Items[0]);
                 return;
             }
             
-            index += steps;
-            if (index < 0) index = 0;
-            if (index >= Items.Count) index = Items.Count - 1;
+            int nextIndex = index + steps;
+            if (nextIndex < 0) nextIndex = 0;
+            if (nextIndex >= Items.Count) nextIndex = Items.Count - 1;
             
-            SelectedItem = Items[index];
-            NotifyStateChanged();
+            var nextItem = Items[nextIndex];
+
+            if (range)
+            {
+                // Shift + Arrow
+                SelectItem(nextItem, range: true);
+            }
+            else
+            {
+                SelectItem(nextItem);
+            }
         }
     }
 }
