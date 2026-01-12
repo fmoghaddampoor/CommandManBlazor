@@ -8,41 +8,38 @@
 
 <PageTitle>CommandMan</PageTitle>
 
-<div class="tc-container">
-    <div class="tc-toolbar">
-       <span class="toolbar-btn">Ref</span>
-       <span class="toolbar-btn">Net</span>
-    </div>
+<div class="main-container">
+    <!-- Optional Top Toolbar or Menu could go here -->
     
-    <div class="tc-panels">
-        <div class="panel-wrapper left-panel">
+    <div class="panels-container">
+        <div class="file-panel @(AppState.ActivePanel == AppState.LeftPanel ? "active" : "")" @onclick="() => Activate(AppState.LeftPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.LeftPanel, path))" />
             <FilePanel State="@AppState.LeftPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.LeftPanel)" 
                        OnActivate="@(() => Activate(AppState.LeftPanel))" />
         </div>
-        <div class="tc-splitter"></div>
-        <div class="panel-wrapper right-panel">
-             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
+        
+        <div class="file-panel @(AppState.ActivePanel == AppState.RightPanel ? "active" : "")" @onclick="() => Activate(AppState.RightPanel)">
+            <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
             <FilePanel State="@AppState.RightPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.RightPanel)" 
                        OnActivate="@(() => Activate(AppState.RightPanel))" />
         </div>
     </div>
     
-    <div class="tc-cmdline">
-        <span class="cmd-prompt">@AppState.ActivePanel.CurrentPath&gt;</span>
+    <div class="command-bar">
+        <span class="cmd-prefix">@AppState.ActivePanel.CurrentPath&gt;</span>
         <input type="text" class="cmd-input" />
     </div>
     
-    <div class="tc-footer">
-        <div class="f-key">F3 View</div>
-        <div class="f-key">F4 Edit</div>
-        <div class="f-key">F5 Copy</div>
-        <div class="f-key">F6 Move</div>
-        <div class="f-key">F7 MkDir</div>
-        <div class="f-key">F8 Delete</div>
-        <div class="f-key">Alt+F4 Exit</div>
+    <div class="app-footer">
+        <div class="f-key-btn">F3 View</div>
+        <div class="f-key-btn">F4 Edit</div>
+        <div class="f-key-btn">F5 Copy</div>
+        <div class="f-key-btn">F6 Move</div>
+        <div class="f-key-btn">F7 MkDir</div>
+        <div class="f-key-btn">F8 Delete</div>
+        <div class="f-key-btn">Alt+F4 Exit</div>
     </div>
 </div>
 
@@ -85,6 +82,8 @@
     protected override void OnInitialized()
     {
         AppState.OnChange += StateHasChanged;
+        AppState.LeftPanel.OnChange += StateHasChanged;
+        AppState.RightPanel.OnChange += StateHasChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -191,6 +190,7 @@
                 AppState.ActivePanel.MoveSelection(1);
                 break;
             case "Tab":
+                Console.WriteLine("Tab pressed. Toggling panel.");
                 if (AppState.ActivePanel == AppState.LeftPanel)
                     AppState.SetActivePanel(AppState.RightPanel);
                 else
@@ -335,6 +335,8 @@
     public async ValueTask DisposeAsync()
     {
         AppState.OnChange -= StateHasChanged;
+        AppState.LeftPanel.OnChange -= StateHasChanged;
+        AppState.RightPanel.OnChange -= StateHasChanged;
         if (dotNetHelper != null)
         {
             try 

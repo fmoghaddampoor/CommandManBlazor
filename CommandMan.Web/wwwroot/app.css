@@ -1,259 +1,247 @@
-h1:focus {
-    outline: none;
-}
-
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid #e50000;
-}
-
-.validation-message {
-    color: #e50000;
-}
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
-}
-
-.blazor-error-boundary::after {
-    content: "An error has occurred."
-}
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
-}
-
-.form-floating>.form-control-plaintext::placeholder,
-.form-floating>.form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
-}
-
-.form-floating>.form-control-plaintext:focus::placeholder,
-.form-floating>.form-control:focus::placeholder {
-    text-align: start;
-}
-
-/* CommandMan Styles */
 :root {
-    --tc-bg: #000080;
-    /* Classic Blue */
-    --tc-text: #ffffff;
-    --tc-panel-bg: #ffffff;
-    --tc-panel-text: #000000;
-    --tc-selection: #800000;
-    /* Red selection */
-    --tc-cursor: #000000;
-    /* Cursor frame? Or inverted. Classic uses dotted or inverted. */
-    --tc-header-bg: #d4d0c8;
-    --tc-header-text: #000000;
+    --bg-color: #1a1a2e;
+    --panel-bg: #16213e;
+    --header-bg: #0f3460;
+    --text-color: #e94560;
+    --text-main: #f1f1f1;
+    --text-muted: #8d99ae;
+    --accent-color: #e94560;
+    --accent-hover: #ff2e63;
+    --border-color: #2a2a40;
+
+    --btn-primary-bg: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+    --btn-hover-bg: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+    --selection-bg: rgba(233, 69, 96, 0.3);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
 }
 
+html,
 body {
-    background-color: var(--tc-bg);
-    color: var(--tc-text);
-    font-family: 'Consolas', 'Courier New', monospace;
-    /* Monospace is key */
-    overflow: hidden;
-    /* App feels like desktop */
-    height: 100vh;
+    height: 100%;
     margin: 0;
-}
-
-.tc-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding: 2px;
-}
-
-.tc-toolbar {
-    height: 30px;
-    background-color: #f0f0f0;
-    color: black;
-    display: flex;
-    align-items: center;
-    padding: 0 5px;
-    margin-bottom: 2px;
-}
-
-.tc-panels {
-    flex: 1;
-    display: flex;
+    padding: 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
     overflow: hidden;
 }
 
-.panel-wrapper {
-    flex: 1;
-    background-color: white;
-    color: black;
+/* Layout */
+.main-container {
     display: flex;
     flex-direction: column;
-    border: 1px solid #808080;
+    height: 100vh;
+    min-height: 0;
 }
 
-.tc-splitter {
-    width: 4px;
-    background-color: #f0f0f0;
-    cursor: col-resize;
-}
-
-.tc-cmdline {
-    height: 30px;
+.command-bar {
+    background-color: var(--panel-bg);
+    padding: 8px 12px;
     display: flex;
     align-items: center;
-    margin-top: 2px;
-    font-size: 14px;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 10;
 }
 
-.cmd-prompt {
+.cmd-prefix {
     font-weight: bold;
-    margin-right: 5px;
-    white-space: nowrap;
+    margin-right: 10px;
+    color: var(--accent-color);
 }
 
 .cmd-input {
     flex: 1;
-    background-color: black;
-    color: white;
-    border: 1px solid gray;
-    font-family: inherit;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.2s;
 }
 
-.drive-picker {
+.cmd-input:focus {
+    border-color: var(--accent-color);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Panels Area */
+.panels-container {
     display: flex;
-    gap: 5px;
-    padding: 2px 5px;
-    background-color: #f0f0f0;
-}
-
-.drive-btn {
-    background-color: #d4d0c8;
-    border: 1px outset white;
-    padding: 1px 6px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    min-width: 30px;
-}
-
-.drive-btn:active {
-    border-style: inset;
-}
-
-.tc-footer {
-    height: 30px;
-    display: flex;
-    gap: 10px;
-    background-color: #f0f0f0;
-    /* Or just blue? Classic has buttons */
-    padding: 2px;
-}
-
-.f-key {
-    background-color: #d4d0c8;
-    color: black;
-    border: 1px outset white;
-    padding: 2px 10px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
     flex: 1;
-    text-align: center;
+    overflow: hidden;
+    padding: 10px;
+    gap: 10px;
+    min-height: 0;
 }
 
-/* File Panel Specifics */
 .file-panel {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    cursor: pointer;
+    min-height: 0;
 }
 
-.file-panel.active .panel-header {
-    background-color: #000080;
-    color: white;
+.file-panel.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px rgba(233, 69, 96, 0.2);
 }
 
 .panel-header {
-    background-color: #d4d0c8;
-    padding: 2px 5px;
-    font-weight: bold;
+    background-color: var(--header-bg);
+    color: var(--text-main);
+    padding: 10px 15px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.current-path {
+    font-family: 'Consolas', monospace;
+    color: #ffd700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .file-list {
     flex: 1;
     overflow-y: auto;
-    background-color: white;
-    cursor: default;
+    background-color: var(--panel-bg);
+    scrollbar-color: var(--accent-color) var(--panel-bg);
+    scrollbar-width: thin;
+    min-height: 0;
 }
 
+/* Table Styles */
 .file-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
-    /* user-select: none; */
+    font-size: 0.9rem;
+    table-layout: fixed;
 }
 
 .file-table th {
-    background-color: #d4d0c8;
+    text-align: left;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-muted);
+    font-weight: 500;
     position: sticky;
     top: 0;
-    text-align: left;
-    border-bottom: 1px solid gray;
+    backdrop-filter: blur(5px);
+    z-index: 5;
 }
 
 .file-table td {
-    padding: 0 4px;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    cursor: pointer;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Selection and Cursor */
-tr.selected {
-    color: #ff0000;
-    /* Red text for selected items like TC */
+.file-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Active Panel Cursor - Row being hovered or focused */
-tr:hover {
-    background-color: #c0c0c0;
+.file-table tr.selected {
+    background-color: var(--selection-bg) !important;
+    color: white;
+    border-left: 3px solid var(--accent-color);
 }
 
-/* Modal Styles */
+.panel-footer {
+    background-color: var(--header-bg);
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Footer Function Keys */
+.app-footer {
+    display: flex;
+    background-color: #0b1e36;
+    padding: 5px;
+    gap: 4px;
+}
+
+.f-key-btn {
+    flex: 1;
+    background: var(--btn-primary-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: center;
+    border-radius: 4px;
+    transition: transform 0.1s, box-shadow 0.2s;
+    user-select: none;
+}
+
+.f-key-btn:hover {
+    background: var(--btn-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    color: white;
+}
+
+/* Modals */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    background-color: var(--modal-overlay);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(3px);
 }
 
 .modal-box {
-    background-color: #d4d0c8;
-    border: 2px outset white;
-    padding: 10px;
+    background-color: var(--panel-bg);
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
     width: 400px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    color: var(--text-main);
 }
 
 .modal-title {
     font-weight: bold;
-    margin-bottom: 10px;
-    color: black;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: var(--accent-color);
 }
 
 .modal-box input {
     width: 100%;
-    margin-bottom: 15px;
+    padding: 8px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: white;
+    border-radius: 4px;
 }
 
 .modal-buttons {
@@ -263,7 +251,59 @@ tr:hover {
 }
 
 .modal-buttons button {
-    min-width: 80px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
 }
 
-/* We need a specific class for the "cursor" item if we implement keyboard nav */
+.modal-buttons button:first-child {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.modal-buttons button:last-child {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+/* Drive Picker */
+.drive-picker {
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.drive-btn {
+    background: linear-gradient(to bottom, #2a2a40, #161625);
+    color: var(--text-main);
+    border: 1px solid #3e3e5e;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.drive-btn:hover {
+    background: linear-gradient(to bottom, #3e3e5e, #2a2a40);
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.drive-btn i {
+    color: var(--accent-color);
+}
+
+.fa-folder {
+    color: #ffd700;
+}

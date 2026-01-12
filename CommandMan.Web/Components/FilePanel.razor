@@ -2,12 +2,13 @@
 @using CommandMan.Core.Interfaces
 @using CommandMan.Web.Services
 @inject IFileSystemService FileService
+@inject IJSRuntime JSRuntime
 
 <div class="file-panel @(IsActive ? "active" : "")" @onclick="ActivatePanel">
     <div class="panel-header">
         <span class="current-path">@State.CurrentPath</span>
     </div>
-    <div class="file-list">
+    <div class="file-list" id="@($"fileList_{State.GetHashCode()}")">
         <table class="table table-sm table-hover file-table">
             <thead>
                 <tr>
@@ -21,7 +22,7 @@
                 @if (State.CurrentPath != ParemptPath && !string.IsNullOrEmpty(State.CurrentPath))
                 {
                      <tr @ondblclick="GoUp">
-                        <td>[..]</td>
+                        <td><i class="fas fa-level-up-alt" style="margin-right:8px; color: var(--accent-color);"></i> [..]</td>
                         <td></td>
                         <td>&lt;DIR&gt;</td>
                         <td></td>
@@ -33,6 +34,7 @@
                         @onclick="() => SelectItem(item)"
                         @ondblclick="() => OpenItem(item)">
                         <td>
+                            <i class="@GetIconClass(item)" style="margin-right:8px;"></i>
                             @if (item is DirectoryItem)
                             {
                                 <span>[@item.Name]</span>
@@ -132,5 +134,51 @@
             len = len / 1024;
         }
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private string GetIconClass(FileSystemItem item)
+    {
+        if (item is DirectoryItem) return "fas fa-folder text-warning"; // text-warning is usually yellow/gold if bootstrap, else we need style or custom class
+        // Use inline style or custom color for now if text-warning isn't defined in my new css.
+        // Wait, my new css doesn't define text-warning. I should use specific colors or "fas fa-folder" with inline style in markup?
+        // Let's return class and I'll add style in markup or here.
+        // Actually, let's just use "fas fa-folder" and assume I add color in markup or CSS.
+        // Or I can return "fas fa-folder" and the markup has style.
+        
+        string ext = item.Extension.ToLower();
+        return ext switch
+        {
+            ".exe" => "fas fa-window-maximize",
+            ".dll" => "fas fa-cogs",
+            ".txt" => "fas fa-file-alt",
+            ".pdf" => "fas fa-file-pdf",
+            ".jpg" or ".png" or ".gif" => "fas fa-file-image",
+            ".zip" or ".rar" or ".7z" => "fas fa-file-archive",
+            ".cs" or ".js" or ".html" or ".css" => "fas fa-file-code",
+            _ => "fas fa-file"
+        };
+    }
+    
+    // Auto-scroll
+    private ElementReference? selectedRow; // We can't bind to a loop variable easily.
+    // Instead, let's just trigger loop search in JS or simpler:
+    // We already have scrollToSelection in JS. Let's use eval for now but cleaner, or invoke unique ID.
+    // Actually, calling querySelector after render is the most robust if we don't have refs.
+    // Let's improve the query selector to be super specific.
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+         if (State.SelectedItem != null && IsActive)
+         {
+             // Use the function we defined in interop.js, but we need the element.
+             // Since we don't have the element, we continue to use querySelector via eval or a helper.
+             // Helper: window.scrollToSelector = (selector) => ...
+             try {
+                // Using a small delay can sometimes fix render timing issues
+                await Task.Delay(1); 
+                var selector = $".file-panel.active #fileList_{State.GetHashCode()} .selected";
+                await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('{selector}')?.scrollIntoView({{block:'nearest'}})");
+             } catch {}
+         }
     }
 }
