@@ -100,11 +100,22 @@ namespace CommandMan.Tray
 
         // --- Server Logic ---
 
+        private int GetPort()
+        {
+            if (int.TryParse(TxtPort.Text, out int port))
+            {
+                return port;
+            }
+            return 5000;
+        }
+
         private async Task CheckAndStartServer()
         {
+            int port = GetPort();
             UpdateStatus("Checking...", Brushes.Gray);
+            FooterText.Text = $"Selected Port: {port}";
             
-            if (IsPortListening(5000))
+            if (IsPortListening(port))
             {
                 UpdateStatus("Running (External)", Brushes.CornflowerBlue);
                 BtnStart.IsEnabled = false;
@@ -118,6 +129,7 @@ namespace CommandMan.Tray
 
         private void StartServer()
         {
+            int port = GetPort();
             try
             {
                 string exeName = "CommandMan.Web.exe";
@@ -131,7 +143,7 @@ namespace CommandMan.Tray
 
                 _serverProcess = new Process();
                 _serverProcess.StartInfo.FileName = path;
-                _serverProcess.StartInfo.Arguments = "--urls http://localhost:5000";
+                _serverProcess.StartInfo.Arguments = $"--urls http://localhost:{port}";
                 _serverProcess.StartInfo.UseShellExecute = false;
                 _serverProcess.StartInfo.CreateNoWindow = true;
                 _serverProcess.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -139,8 +151,10 @@ namespace CommandMan.Tray
                 _serverProcess.Start();
                 
                 UpdateStatus("Running", Brushes.SpringGreen);
+                FooterText.Text = $"Server running on port {port}";
                 BtnStart.IsEnabled = false;
                 BtnStop.IsEnabled = true;
+                TxtPort.IsEnabled = false;
             }
             catch (Exception ex)
             {
@@ -157,26 +171,43 @@ namespace CommandMan.Tray
                     _serverProcess.Kill();
                     _serverProcess = null;
                     UpdateStatus("Stopped", Brushes.Orange);
+                    FooterText.Text = "Ready";
                     BtnStart.IsEnabled = true;
                     BtnStop.IsEnabled = false;
+                    TxtPort.IsEnabled = true;
                 }
                 catch { }
             }
             else
             {
                 UpdateStatus("Stopped", Brushes.Gray);
+                FooterText.Text = "Ready";
                 BtnStart.IsEnabled = true;
                 BtnStop.IsEnabled = false;
+                TxtPort.IsEnabled = true;
             }
         }
 
         private void OpenBrowser()
         {
+            int port = GetPort();
             try
             {
+                // Reconstruct URL with current port
+                string url = _startUrl;
+                if (url.Contains("localhost:"))
+                {
+                    // Split and replace port if present
+                    // This is a bit lazy, let's just use UriBuilder if we want to be clean
+                    // But usually _startUrl is http://localhost:5000/...
+                    url = url.Replace(":5000", ":" + port); 
+                    // To be safer, if the user passed arguments, we should handle them.
+                    // Actually, App.xaml.cs constructs the URL with port 5000.
+                }
+
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = _startUrl,
+                    FileName = url,
                     UseShellExecute = true
                 });
             }

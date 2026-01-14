@@ -15,12 +15,16 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" BorderBrush="#555555" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#444444"/>
+                                <Setter TargetName="border" Property="Background" Value="#555555"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#007ACC"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#222222"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5"/>
@@ -35,20 +39,29 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
             <Ellipse Width="12" Height="12" x:Name="StatusDot" Fill="Gray" Margin="0,0,10,0"/>
             <TextBlock x:Name="StatusText" Text="Checking Status..." FontSize="16" FontWeight="SemiBold"/>
         </StackPanel>
 
+        <!-- Configuration -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <TextBlock Text="Port:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#AAAAAA"/>
+            <TextBox x:Name="TxtPort" Text="5000" Width="60" Height="24" 
+                     Background="#2D2D2D" Foreground="White" BorderBrush="#555555" 
+                     VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        </StackPanel>
+
         <!-- Content/Actions -->
-        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center">
             
-            <Button x:Name="BtnOpen" Click="BtnOpen_Click" Height="40" Width="200" Background="#007ACC" Margin="0,0,0,20">
+            <Button x:Name="BtnOpen" Click="BtnOpen_Click" Height="40" Width="200" Background="#007ACC" Margin="0,0,0,15">
                 <StackPanel Orientation="Horizontal">
                     <Path Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" Fill="White" Height="14" Width="14" Stretch="Uniform" Margin="0,0,8,0"/>
                     <TextBlock Text="Open CommandMan"/>
@@ -56,13 +69,13 @@
             </Button>
             
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button x:Name="BtnStart" Click="BtnStart_Click" Width="95" Background="#28a745">
+                <Button x:Name="BtnStart" Click="BtnStart_Click" Width="95" Background="#288735">
                     <StackPanel Orientation="Horizontal">
                          <Path Data="M8,5.14V19.14L19,12.14L8,5.14Z" Fill="White" Height="12" Width="12" Stretch="Uniform" Margin="0,0,5,0"/>
                          <TextBlock Text="Start"/>
                     </StackPanel>
                 </Button>
-                <Button x:Name="BtnStop" Click="BtnStop_Click" Width="95" Background="#dc3545">
+                <Button x:Name="BtnStop" Click="BtnStop_Click" Width="95" Background="#bc2535">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M18,18H6V6H18V18Z" Fill="White" Height="12" Width="12" Stretch="Uniform" Margin="0,0,5,0"/>
                          <TextBlock Text="Stop"/>
@@ -72,7 +85,7 @@
         </StackPanel>
         
         <!-- Footer -->
-        <TextBlock Grid.Row="2" Text="Running on port 5000" Foreground="#888888" HorizontalAlignment="Center" FontSize="11"/>
+        <TextBlock x:Name="FooterText" Grid.Row="3" Text="Ready" Foreground="#888888" HorizontalAlignment="Center" FontSize="11"/>
         
     </Grid>
 </Window>
