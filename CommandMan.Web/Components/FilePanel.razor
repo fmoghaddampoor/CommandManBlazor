@@ -4,12 +4,10 @@
 @inject IFileSystemService FileService
 @inject IJSRuntime JSRuntime
 
-<div class="file-panel @(IsActive ? "active" : "") @(isDragOver ? "drag-over" : "")" 
+<div class="file-list-container @(isDragOver ? "drag-over" : "")" 
+     id="@panelId"
      @onclick="ActivatePanel"
-     @ondrop="HandleDrop"
-     @ondragover:prevent
-     @ondragenter="() => isDragOver = true"
-     @ondragleave="() => isDragOver = false">
+     @ref="panelContainer">
     <div class="panel-header">
         <span class="current-path">@State.CurrentPath</span>
     </div>
@@ -72,6 +70,43 @@
     [Parameter] public EventCallback<PanelState> OnDropReceived { get; set; }
 
     private bool isDragOver = false;
+    private int dragCounter = 0;
+    private ElementReference panelContainer;
+    private DotNetObjectReference<FilePanel>? dotNetRef;
+    private string panelId => $"panel_{State.GetHashCode()}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("setupDragDrop", dotNetRef, panelId);
+        }
+
+        // Auto-scroll to selected item
+        if (State.SelectedItem != null && IsActive)
+        {
+            try {
+                await Task.Delay(1); 
+                var selector = $".file-panel.active #fileList_{State.GetHashCode()} .selected";
+                await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('{selector}')?.scrollIntoView({{block:'nearest'}})");
+            } catch {}
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnDropFromJS()
+    {
+        try { await JSRuntime.InvokeVoidAsync("console.log", "[D&D Debug] C#: OnDropFromJS invoked for " + State.CurrentPath); } catch {}
+        isDragOver = false;
+        dragCounter = 0;
+        if (DragDropService.SourcePanel != null && DragDropService.SourcePanel != State)
+        {
+            await OnDropReceived.InvokeAsync(DragDropService.SourcePanel);
+        }
+        DragDropService.SourcePanel = null;
+        StateHasChanged();
+    }
 
     private string ParemptPath => ""; // simplified
 
@@ -128,25 +163,12 @@
 
     private void HandleDragStart(FileSystemItem item)
     {
-        // If the item being dragged is not selected, select it (and clear others if not Ctrl/Shift)
-        // Standard explorer behavior: dragging a non-selected item selects it and starts drag.
+        try { JSRuntime.InvokeVoidAsync("console.log", "[D&D Debug] Drag Start: " + item.Name); } catch {}
         if (!State.SelectedItems.Contains(item))
         {
             State.SelectItem(item);
         }
-        
-        // We use a simple static property or service to track the source panel during drag
         DragDropService.SourcePanel = State;
-    }
-
-    private async Task HandleDrop()
-    {
-        isDragOver = false;
-        if (DragDropService.SourcePanel != null && DragDropService.SourcePanel != State)
-        {
-            await OnDropReceived.InvokeAsync(DragDropService.SourcePanel);
-        }
-        DragDropService.SourcePanel = null;
     }
     
     private void ActivatePanel()
@@ -193,26 +215,5 @@
         };
     }
     
-    // Auto-scroll
-    private ElementReference? selectedRow; // We can't bind to a loop variable easily.
-    // Instead, let's just trigger loop search in JS or simpler:
-    // We already have scrollToSelection in JS. Let's use eval for now but cleaner, or invoke unique ID.
-    // Actually, calling querySelector after render is the most robust if we don't have refs.
-    // Let's improve the query selector to be super specific.
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-         if (State.SelectedItem != null && IsActive)
-         {
-             // Use the function we defined in interop.js, but we need the element.
-             // Since we don't have the element, we continue to use querySelector via eval or a helper.
-             // Helper: window.scrollToSelector = (selector) => ...
-             try {
-                // Using a small delay can sometimes fix render timing issues
-                await Task.Delay(1); 
-                var selector = $".file-panel.active #fileList_{State.GetHashCode()} .selected";
-                await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('{selector}')?.scrollIntoView({{block:'nearest'}})");
-             } catch {}
-         }
-    }
+    // Auto-scroll is now handled in the main OnAfterRenderAsync above
 }

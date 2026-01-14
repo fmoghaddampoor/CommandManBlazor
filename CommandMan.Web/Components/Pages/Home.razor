@@ -18,20 +18,22 @@
     <!-- Optional Top Toolbar or Menu could go here -->
     
     <div class="panels-container">
-        <div class="file-panel @(AppState.ActivePanel == AppState.LeftPanel ? "active" : "")" @onclick="() => Activate(AppState.LeftPanel)">
+        <div class="file-panel @(AppState.ActivePanel == AppState.LeftPanel ? "active" : "")" 
+             @onclick="() => Activate(AppState.LeftPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.LeftPanel, path))" />
             <FilePanel State="@AppState.LeftPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.LeftPanel)" 
                        OnActivate="@(() => Activate(AppState.LeftPanel))"
-                       OnDropReceived="HandleDropOnLeft" />
+                       OnDropReceived="@(src => HandleDragMove(src, AppState.LeftPanel))" />
         </div>
         
-        <div class="file-panel @(AppState.ActivePanel == AppState.RightPanel ? "active" : "")" @onclick="() => Activate(AppState.RightPanel)">
+        <div class="file-panel @(AppState.ActivePanel == AppState.RightPanel ? "active" : "")" 
+             @onclick="() => Activate(AppState.RightPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
             <FilePanel State="@AppState.RightPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.RightPanel)" 
                        OnActivate="@(() => Activate(AppState.RightPanel))"
-                       OnDropReceived="HandleDropOnRight" />
+                       OnDropReceived="@(src => HandleDragMove(src, AppState.RightPanel))" />
         </div>
     </div>
     
@@ -80,6 +82,11 @@
     private string ModalInputValue = "";
     private ActionType ModalAction;
     
+    private bool isLeftDragOver = false;
+    private bool isRightDragOver = false;
+    private int leftDragCounter = 0;
+    private int rightDragCounter = 0;
+
     private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete }
 
     protected override void OnInitialized()
@@ -314,6 +321,7 @@
 
     private async Task SubmitModal()
     {
+        Console.WriteLine($"SubmitModal: {ModalAction} to {ModalInputValue}");
         try 
         {
             var active = AppState.ActivePanel;
@@ -363,15 +371,12 @@
                         
                         var dest = System.IO.Path.Combine(ModalInputValue, item.Name);
                         
-                        if (!await FileService.ExistsAsync(dest))
-                        {
-                            if (ModalAction == ActionType.Copy)
-                                await FileService.CopyItemAsync(item.FullPath, dest);
-                            else
-                                await FileService.MoveItemAsync(item.FullPath, dest);
-                            
-                            transferredNames.Add(item.Name);
-                        }
+                        if (ModalAction == ActionType.Copy)
+                            await FileService.CopyItemAsync(item.FullPath, dest);
+                        else
+                            await FileService.MoveItemAsync(item.FullPath, dest);
+                        
+                        transferredNames.Add(item.Name);
                     }
                     ProgressState.Stop();
                     await ReloadPanel(active);
@@ -460,19 +465,20 @@
         }
     }
 
-    private async Task HandleDropOnLeft(PanelState source) => await HandleDragMove(source, AppState.LeftPanel);
-    private async Task HandleDropOnRight(PanelState source) => await HandleDragMove(source, AppState.RightPanel);
-
     private async Task HandleDragMove(PanelState source, PanelState target)
     {
+        await Log($"HandleDragMove from {source.CurrentPath} to {target.CurrentPath}");
         if (source == target) return;
 
-        // Ensure the source panel is active so we move from it
         AppState.SetActivePanel(source);
-        
-        // Auto-fill the destination and open the Move modal
+        ModalAction = ActionType.Move;
         ModalInputValue = target.CurrentPath;
-        await OpenModal(ActionType.Move);
+        await SubmitModal();
+    }
+
+    private async Task Log(string msg)
+    {
+        try { await JS.InvokeVoidAsync("console.log", "[D&D Debug] " + msg); } catch {}
     }
 }
 

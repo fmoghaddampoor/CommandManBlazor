@@ -172,16 +172,35 @@ namespace CommandMan.Infrastructure.Services
 
         public async Task MoveItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null)
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 if (Directory.Exists(sourcePath))
                 {
-                    // Directory.Move is generally fast (metadata change) unless cross-volume
-                    Directory.Move(sourcePath, destPath);
+                    Console.WriteLine($"Moving directory: {sourcePath} -> {destPath}");
+                    try
+                    {
+                        Directory.Move(sourcePath, destPath);
+                    }
+                    catch (Exception ex) // catch any error and fallback
+                    {
+                        Console.WriteLine($"Move failed: {ex.Message}. Falling back to Copy+Delete.");
+                        await CopyItemAsync(sourcePath, destPath, onProgress);
+                        Directory.Delete(sourcePath, true);
+                    }
                 }
                 else
                 {
-                    File.Move(sourcePath, destPath);
+                    Console.WriteLine($"Moving file: {sourcePath} -> {destPath}");
+                    try
+                    {
+                        File.Move(sourcePath, destPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"File move failed: {ex.Message}. Falling back to Copy+Delete.");
+                        File.Copy(sourcePath, destPath, true);
+                        File.Delete(sourcePath);
+                    }
                 }
                 onProgress?.Invoke(100);
             });
