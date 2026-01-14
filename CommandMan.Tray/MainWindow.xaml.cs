@@ -24,11 +24,40 @@ namespace CommandMan.Tray
         {
             InitializeComponent();
             _startUrl = url;
+            
+            LoadPortSetting();
             InitializeTrayIcon();
             
             // Initial checks and starts
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
+        }
+
+        private void LoadPortSetting()
+        {
+            try
+            {
+                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "port.txt");
+                if (File.Exists(path))
+                {
+                    string savedPort = File.ReadAllText(path).Trim();
+                    if (int.TryParse(savedPort, out int port))
+                    {
+                        TxtPort.Text = savedPort;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void SavePortSetting(int port)
+        {
+            try
+            {
+                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "port.txt");
+                File.WriteAllText(path, port.ToString());
+            }
+            catch { }
         }
 
         private void InitializeTrayIcon()
@@ -150,6 +179,7 @@ namespace CommandMan.Tray
                 
                 _serverProcess.Start();
                 
+                SavePortSetting(port);
                 UpdateStatus("Running", Brushes.SpringGreen);
                 FooterText.Text = $"Server running on port {port}";
                 BtnStart.IsEnabled = false;

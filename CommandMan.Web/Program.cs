@@ -31,4 +31,4 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run("http://localhost:5000");
+app.Run();

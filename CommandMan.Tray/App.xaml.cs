@@ -22,7 +22,21 @@ namespace CommandMan.Tray
             }
 
             // Construct URL
-            string url = "http://localhost:5000";
+            int port = 5000;
+            try
+            {
+                string portPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "port.txt");
+                if (System.IO.File.Exists(portPath))
+                {
+                    if (int.TryParse(System.IO.File.ReadAllText(portPath).Trim(), out int savedPort))
+                    {
+                        port = savedPort;
+                    }
+                }
+            }
+            catch { }
+
+            string url = $"http://localhost:{port}";
             if (!string.IsNullOrEmpty(left) || !string.IsNullOrEmpty(right))
             {
                 url += "?";
