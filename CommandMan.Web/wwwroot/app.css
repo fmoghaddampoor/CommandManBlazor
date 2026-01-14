@@ -172,6 +172,13 @@ body {
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+}
+
+.selected-count {
+    color: var(--accent-color);
+    font-weight: 500;
 }
 
 /* Footer Function Keys */
