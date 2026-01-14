@@ -22,14 +22,16 @@
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.LeftPanel, path))" />
             <FilePanel State="@AppState.LeftPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.LeftPanel)" 
-                       OnActivate="@(() => Activate(AppState.LeftPanel))" />
+                       OnActivate="@(() => Activate(AppState.LeftPanel))"
+                       OnDropReceived="HandleDropOnLeft" />
         </div>
         
         <div class="file-panel @(AppState.ActivePanel == AppState.RightPanel ? "active" : "")" @onclick="() => Activate(AppState.RightPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
             <FilePanel State="@AppState.RightPanel" 
                        IsActive="@(AppState.ActivePanel == AppState.RightPanel)" 
-                       OnActivate="@(() => Activate(AppState.RightPanel))" />
+                       OnActivate="@(() => Activate(AppState.RightPanel))"
+                       OnDropReceived="HandleDropOnRight" />
         </div>
     </div>
     
@@ -340,6 +342,10 @@
                         var newPath = System.IO.Path.Combine(active.CurrentPath, ModalInputValue);
                         await FileService.CreateDirectoryAsync(newPath);
                         await ReloadPanel(active);
+                        
+                        // Select the new folder
+                        var newItem = active.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
+                        if (newItem != null) active.SelectItem(newItem);
                     }
                     break;
 
@@ -347,6 +353,8 @@
                 case ActionType.Move:
                     ProgressState.Start(ModalAction == ActionType.Copy ? "Copying..." : "Moving...");
                     int idx = 0;
+                    var transferredNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    
                     foreach (var item in selectedItems)
                     {
                         idx++;
@@ -355,19 +363,35 @@
                         
                         var dest = System.IO.Path.Combine(ModalInputValue, item.Name);
                         
-                        // User requested: "check if those folder or files does not exist move"
-                        // I'll skip if exists to be safe as per request
                         if (!await FileService.ExistsAsync(dest))
                         {
                             if (ModalAction == ActionType.Copy)
                                 await FileService.CopyItemAsync(item.FullPath, dest);
                             else
                                 await FileService.MoveItemAsync(item.FullPath, dest);
+                            
+                            transferredNames.Add(item.Name);
                         }
                     }
                     ProgressState.Stop();
                     await ReloadPanel(active);
                     await ReloadPanel(targetPanel);
+
+                    // Select transferred items in target panel
+                    if (transferredNames.Any())
+                    {
+                        var newItems = targetPanel.Items.Where(i => transferredNames.Contains(i.Name)).ToList();
+                        if (newItems.Any())
+                        {
+                            targetPanel.SelectedItems.Clear();
+                            foreach (var ni in newItems) targetPanel.SelectedItems.Add(ni);
+                            targetPanel.SelectedItem = newItems.First();
+                            targetPanel.NotifyStateChanged();
+                            
+                            // Also activate the target panel so user sees the result
+                            AppState.SetActivePanel(targetPanel);
+                        }
+                    }
                     break;
 
                 case ActionType.Delete:
@@ -434,6 +458,21 @@
             catch {} 
             dotNetHelper.Dispose();
         }
+    }
+
+    private async Task HandleDropOnLeft(PanelState source) => await HandleDragMove(source, AppState.LeftPanel);
+    private async Task HandleDropOnRight(PanelState source) => await HandleDragMove(source, AppState.RightPanel);
+
+    private async Task HandleDragMove(PanelState source, PanelState target)
+    {
+        if (source == target) return;
+
+        // Ensure the source panel is active so we move from it
+        AppState.SetActivePanel(source);
+        
+        // Auto-fill the destination and open the Move modal
+        ModalInputValue = target.CurrentPath;
+        await OpenModal(ActionType.Move);
     }
 }
 

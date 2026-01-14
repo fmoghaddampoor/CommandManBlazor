@@ -95,6 +95,11 @@ body {
     box-shadow: 0 0 15px rgba(233, 69, 96, 0.2);
 }
 
+.file-panel.drag-over {
+    border: 2px dashed var(--accent-color) !important;
+    background-color: rgba(233, 69, 96, 0.05);
+}
+
 .panel-header {
     background-color: var(--header-bg);
     color: var(--text-main);
