@@ -84,8 +84,6 @@ namespace CommandMan.Tray
             var contextMenu = new ContextMenuStrip();
             contextMenu.Items.Add("Open CommandMan", null, (s, e) => OpenBrowser());
             contextMenu.Items.Add("Show Control Panel", null, (s, e) => ShowWindow());
-            contextMenu.Items.Add("-");
-            contextMenu.Items.Add("Exit", null, (s, e) => ExitApp());
             _trayIcon.ContextMenuStrip = contextMenu;
         }
 

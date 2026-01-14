@@ -45,7 +45,6 @@
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Move)">F6 Move</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.MkDir)">F7 MkDir</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Delete)">F8 Delete</div>
-        <div class="f-key-btn" @onclick="Exit">Alt+F4 Exit</div>
     </div>
 </div>
 
@@ -265,11 +264,6 @@
         }
     }
 
-    private void Exit()
-    {
-        // For web apps, we can't really "Exit" the process, but we can redirect or show a message
-        Navigation.NavigateTo("about:blank");
-    }
 
     private async Task HandleEdit()
     {
