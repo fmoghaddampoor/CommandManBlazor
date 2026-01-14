@@ -1,6 +1,7 @@
 # Build results
 [Bb]in/
 [Oo]bj/
+publish/
 
 # VS Code
 .vscode/

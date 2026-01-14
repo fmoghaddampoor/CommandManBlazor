@@ -70,10 +70,6 @@
     </div>
 }
 
-@inject IJSRuntime JS
-@inject IFileSystemService FileService
-@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
-
 @code {
     private DotNetObjectReference<Home>? dotNetHelper;
     
@@ -122,13 +118,26 @@
         string leftPath = "";
         string rightPath = "";
 
+        // Check query parameters first
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        
+        if (query.TryGetValue("left", out var leftQuery)) leftPath = leftQuery.ToString();
+        if (query.TryGetValue("right", out var rightQuery)) rightPath = rightQuery.ToString();
+
         try 
         {
-            var leftRes = await LocalStorage.GetAsync<string>("LeftPanelPath");
-            if (leftRes.Success) leftPath = leftRes.Value ?? "";
+            if (string.IsNullOrEmpty(leftPath))
+            {
+                var leftRes = await LocalStorage.GetAsync<string>("LeftPanelPath");
+                if (leftRes.Success) leftPath = leftRes.Value ?? "";
+            }
             
-            var rightRes = await LocalStorage.GetAsync<string>("RightPanelPath");
-            if (rightRes.Success) rightPath = rightRes.Value ?? "";
+            if (string.IsNullOrEmpty(rightPath))
+            {
+                var rightRes = await LocalStorage.GetAsync<string>("RightPanelPath");
+                if (rightRes.Success) rightPath = rightRes.Value ?? "";
+            }
         }
         catch (Exception ex)
         { 
