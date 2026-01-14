@@ -1,6 +1,6 @@
 # CommandManBlazor
 
-![CommandManBlazor Preview](assets/app_preview_v2.png)
+![CommandManBlazor Preview](assets/app_preview_v3.png)
 
 CommandManBlazor is a modern, web-based file manager built with Blazor Server. It provides a dual-panel interface similar to classic file managers like Norton Commander or Total Commander.
 
