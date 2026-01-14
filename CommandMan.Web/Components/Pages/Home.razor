@@ -92,8 +92,16 @@
     protected override void OnInitialized()
     {
         AppState.OnChange += StateHasChanged;
-        AppState.LeftPanel.OnChange += StateHasChanged;
-        AppState.RightPanel.OnChange += StateHasChanged;
+        
+        // Trigger UI update and auto-save on panel changes
+        AppState.LeftPanel.OnChange += async () => { 
+            StateHasChanged(); 
+            await SavePanelPath(AppState.LeftPanel, "LeftPanelPath");
+        };
+        AppState.RightPanel.OnChange += async () => { 
+            StateHasChanged(); 
+            await SavePanelPath(AppState.RightPanel, "RightPanelPath");
+        };
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -122,7 +130,6 @@
     
     private async Task LoadState()
     {
-        // Try load from local storage
         string leftPath = "";
         string rightPath = "";
 
@@ -137,29 +144,36 @@
         {
             if (string.IsNullOrEmpty(leftPath))
             {
-                var leftRes = await LocalStorage.GetAsync<string>("LeftPanelPath");
-                if (leftRes.Success) leftPath = leftRes.Value ?? "";
+                leftPath = await JS.InvokeAsync<string>("loadPanelPath", "LeftPanelPath");
             }
             
             if (string.IsNullOrEmpty(rightPath))
             {
-                var rightRes = await LocalStorage.GetAsync<string>("RightPanelPath");
-                if (rightRes.Success) rightPath = rightRes.Value ?? "";
+                rightPath = await JS.InvokeAsync<string>("loadPanelPath", "RightPanelPath");
             }
         }
         catch (Exception ex)
         { 
-            // Storage might be unavailable
+            Console.WriteLine($"LoadState Error: {ex.Message}");
         } 
 
-        if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
+        // Get default drive for fallback
+        var drives = await FileService.GetDrivesAsync();
+        var defaultDrive = drives.FirstOrDefault()?.FullPath ?? "C:\\";
+
+        // Validate left path exists, fallback to default drive if not
+        if (string.IsNullOrEmpty(leftPath) || !await FileService.ExistsAsync(leftPath))
         {
-             // Default to first available drive
-             var drives = await FileService.GetDrivesAsync();
-             var defaultDrive = drives.FirstOrDefault()?.FullPath ?? "";
-             if (string.IsNullOrEmpty(leftPath)) leftPath = defaultDrive;
-             if (string.IsNullOrEmpty(rightPath)) rightPath = defaultDrive;
+            leftPath = defaultDrive;
         }
+
+        // Validate right path exists, fallback to default drive if not
+        if (string.IsNullOrEmpty(rightPath) || !await FileService.ExistsAsync(rightPath))
+        {
+            rightPath = defaultDrive;
+        }
+
+        Console.WriteLine($"Applying Paths: Left={leftPath}, Right={rightPath}");
 
         // Apply
         await SetPanelPath(AppState.LeftPanel, leftPath, save: false);
@@ -175,16 +189,21 @@
         panel.SelectedItem = panel.Items.FirstOrDefault(); // Optional: select first
         panel.NotifyStateChanged();
         
-        if (save)
+        // Saving is now handled by the OnChange event subscription in OnInitialized
+    }
+
+    private async Task SavePanelPath(PanelState panel, string key)
+    {
+        try
         {
-            try
+            if (!string.IsNullOrEmpty(panel.CurrentPath))
             {
-                if (panel == AppState.LeftPanel)
-                     await LocalStorage.SetAsync("LeftPanelPath", path);
-                else
-                     await LocalStorage.SetAsync("RightPanelPath", path);
+               await JS.InvokeVoidAsync("savePanelPath", key, panel.CurrentPath);
             }
-            catch {}
+        }
+        catch (Exception ex)
+        {
+             // Console.WriteLine($"Error saving path for {key}: {ex.Message}");
         }
     }
 

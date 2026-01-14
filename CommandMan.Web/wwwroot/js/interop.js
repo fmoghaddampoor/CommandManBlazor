@@ -28,3 +28,21 @@ window.unregisterKeyboardHandler = () => {
         window.removeEventListener('keydown', window.commandManKeyHandler);
     }
 };
+
+// Panel path persistence
+window.savePanelPath = (panelKey, path) => {
+    try {
+        localStorage.setItem(panelKey, path);
+    } catch (e) {
+        console.warn('Failed to save panel path:', e);
+    }
+};
+
+window.loadPanelPath = (panelKey) => {
+    try {
+        return localStorage.getItem(panelKey) || null;
+    } catch (e) {
+        console.warn('Failed to load panel path:', e);
+        return null;
+    }
+};
