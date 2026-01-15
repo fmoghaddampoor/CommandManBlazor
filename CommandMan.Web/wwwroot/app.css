@@ -627,11 +627,15 @@ tr.drag-over {
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
     100% {
         transform: rotate(360deg);
     }
+}
+
+.selection-box {
+    position: fixed;
+    border: 1px solid var(--accent-color);
+    background-color: rgba(233, 69, 96, 0.2);
+    pointer-events: none;
+    z-index: 9999;
 }
