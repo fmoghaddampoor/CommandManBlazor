@@ -1,0 +1,33 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CommandMan.Core -> C:\CommandManBlazor\CommandManBlazor\CommandMan.Core\bin\Debug\net10.0\CommandMan.Core.dll
+  CommandMan.Infrastructure -> C:\CommandManBlazor\CommandManBlazor\CommandMan.Infrastructure\bin\Debug\net10.0\CommandMan.Infrastructure.dll
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(362,26): warning CS0168: The variable 'ex' is declared but never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(804,66): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(816,43): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(820,42): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(823,29): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(824,29): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\FilePanel.razor(121,17): warning CS0414: The field 'FilePanel.dragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(237,17): warning CS0414: The field 'Home.leftDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(236,18): warning CS0414: The field 'Home.isRightDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(235,18): warning CS0414: The field 'Home.isLeftDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(238,17): warning CS0414: The field 'Home.rightDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+
+Build FAILED.
+
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(362,26): warning CS0168: The variable 'ex' is declared but never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\FilePanel.razor(121,17): warning CS0414: The field 'FilePanel.dragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(237,17): warning CS0414: The field 'Home.leftDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(236,18): warning CS0414: The field 'Home.isRightDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(235,18): warning CS0414: The field 'Home.isLeftDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(238,17): warning CS0414: The field 'Home.rightDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(804,66): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(816,43): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(820,42): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(823,29): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(824,29): error CS0103: The name 'passive' does not exist in the current context [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+    6 Warning(s)
+    5 Error(s)
+
+Time Elapsed 00:00:03.46

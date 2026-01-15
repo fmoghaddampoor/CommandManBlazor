@@ -208,7 +208,58 @@ namespace CommandMan.Infrastructure.Services
                         File.Delete(sourcePath);
                     }
                 }
-                onProgress?.Invoke(100);
+            });
+        }
+
+        public async Task ZipItemsAsync(List<string> sourcePaths, string destinationZipPath, System.IO.Compression.CompressionLevel compressionLevel)
+        {
+            await Task.Run(() =>
+            {
+                // Create a temporary directory to collect items
+                string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+
+                try
+                {
+                    foreach (var sourcePath in sourcePaths)
+                    {
+                        if (string.IsNullOrEmpty(sourcePath)) continue;
+
+                        string name = Path.GetFileName(sourcePath);
+                        if (string.IsNullOrEmpty(name)) 
+                        {
+                            // If it's a drive root or something similar
+                            name = new DirectoryInfo(sourcePath).Name;
+                        }
+
+                        string destPath = Path.Combine(tempDir, name);
+
+                        if (Directory.Exists(sourcePath))
+                        {
+                            CopyDirectory(sourcePath, destPath, null);
+                        }
+                        else if (File.Exists(sourcePath))
+                        {
+                            File.Copy(sourcePath, destPath, true);
+                        }
+                    }
+
+                    // Create Zip from temp directory
+                    if (File.Exists(destinationZipPath))
+                    {
+                        File.Delete(destinationZipPath);
+                    }
+
+                    System.IO.Compression.ZipFile.CreateFromDirectory(tempDir, destinationZipPath, compressionLevel, false);
+                }
+                finally
+                {
+                    // Cleanup temp directory
+                    if (Directory.Exists(tempDir))
+                    {
+                        Directory.Delete(tempDir, true);
+                    }
+                }
             });
         }
 

@@ -51,6 +51,7 @@
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.MkDir)">F7 MkDir</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Delete)">F8 Delete</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.NewFile)">F9 NewFile</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Zip)">F10 Zip</div>
     </div>
 </div>
 
@@ -59,13 +60,31 @@
     <div class="modal-overlay">
         <div class="modal-box">
              <div class="modal-title">@ModalTitle</div>
-             @if (ModalAction != ActionType.Delete) 
+             @if (ModalAction == ActionType.Zip)
              {
-                 <input @bind="ModalInputValue" id="modalInput" autofocus />
+                 <div class="modal-form">
+                     <div class="input-group">
+                         <label>Archive Name</label>
+                         <input @bind="ModalInputValue" id="modalInput" autofocus />
+                     </div>
+                     <div class="input-group">
+                         <label>Compression Level</label>
+                         <select @bind="ZipCompressionLevel" class="modal-select">
+                             <option value="Optimal">Optimal</option>
+                             <option value="Fastest">Fastest</option>
+                             <option value="NoCompression">No Compression</option>
+                             <option value="SmallestSize">Smallest Size</option>
+                         </select>
+                     </div>
+                 </div>
+             }
+             else if (ModalAction == ActionType.Delete)
+             {
+                 <p style="color:black">Are you sure you want to delete @AppState.ActivePanel.SelectedItem?.Name ?</p>
              }
              else
              {
-                 <p style="color:black">Are you sure you want to delete @AppState.ActivePanel.SelectedItem?.Name ?</p>
+                 <input @bind="ModalInputValue" id="modalInput" autofocus />
              }
              <div class="modal-buttons">
                  <button @onclick="SubmitModal">OK</button>
@@ -217,8 +236,10 @@
     private bool isRightDragOver = false;
     private int leftDragCounter = 0;
     private int rightDragCounter = 0;
+    
+    private string ZipCompressionLevel = "Optimal";
 
-    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite, Zip }
 
     protected override void OnInitialized()
     {
@@ -403,6 +424,9 @@
             case "F9":
                 await TriggerAction(ActionType.NewFile);
                 break;
+            case "F10":
+                await TriggerAction(ActionType.Zip);
+                break;
             default:
                 if (e.Key.Length == 1)
                 {
@@ -434,6 +458,7 @@
             case ActionType.MkDir:
             case ActionType.Delete:
             case ActionType.NewFile:
+            case ActionType.Zip:
                 OpenModal(action);
                 break;
         }
@@ -484,6 +509,10 @@
                 break;
             case ActionType.Delete:
                 ModalTitle = "Delete " + selectedName;
+                break;
+            case ActionType.Zip:
+                ModalTitle = "Pack " + selectedName + " to zip";
+                ModalInputValue = "archive.zip";
                 break;
         }
         StateHasChanged();
@@ -765,6 +794,36 @@
                     }
                     ProgressState.Stop();
                     await ReloadPanel(active);
+                    break;
+                    
+                case ActionType.Zip:
+                    if (!string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                        ProgressState.Start("Zipping...");
+                        
+                        var destZipPath = System.IO.Path.Combine(targetPanel.CurrentPath, ModalInputValue);
+                        if (!destZipPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                        {
+                            destZipPath += ".zip";
+                        }
+                        
+                        var level = Enum.Parse<System.IO.Compression.CompressionLevel>(ZipCompressionLevel);
+                        var sourcePaths = selectedItems.Select(i => i.FullPath).ToList();
+                        
+                        await FileService.ZipItemsAsync(sourcePaths, destZipPath, level);
+                        
+                        ProgressState.Stop();
+                        await ReloadPanel(targetPanel);
+                        
+                        // Select the new zip file in passive panel
+                        var zipName = System.IO.Path.GetFileName(destZipPath);
+                        var newZipItem = targetPanel.Items.FirstOrDefault(i => i.Name.Equals(zipName, StringComparison.OrdinalIgnoreCase));
+                        if (newZipItem != null) 
+                        {
+                            targetPanel.SelectItem(newZipItem);
+                            targetPanel.NotifyStateChanged();
+                        }
+                    }
                     break;
             }
         }

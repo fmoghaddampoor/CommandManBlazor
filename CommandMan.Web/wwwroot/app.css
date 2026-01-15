@@ -264,6 +264,21 @@ body {
     border-radius: 4px;
 }
 
+.modal-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.modal-select option {
+    background-color: var(--panel-bg);
+    color: var(--text-main);
+}
+
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
