@@ -54,9 +54,10 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Ext</th>
+                    <th>Extension</th>
+                    <th>Date modified</th>
                     <th>Size</th>
-                    <th>Date</th>
+                    <th>File version</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,8 +65,9 @@
                 {
                      <tr @ondblclick="GoUp">
                         <td><i class="fas fa-level-up-alt" style="margin-right:8px; color: var(--accent-color);"></i> [..]</td>
-                        <td></td>
                         <td>&lt;DIR&gt;</td>
+                        <td></td>
+                        <td></td>
                         <td></td>
                     </tr>
                 }
@@ -88,8 +90,9 @@
                             }
                         </td>
                         <td>@item.Extension</td>
-                        <td>@(item is FileItem f ? FormatSize(f.FileSize) : "<DIR>")</td>
                         <td>@item.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(item is FileItem f ? FormatSize(f.FileSize) : "<DIR>")</td>
+                        <td>@item.FileVersion</td>
                     </tr>
                 }
             </tbody>

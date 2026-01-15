@@ -7,6 +7,7 @@ namespace CommandMan.Core.Entities
         public string Name { get; set; } = string.Empty;
         public string FullPath { get; set; } = string.Empty;
         public DateTime LastModified { get; set; }
+        public string FileVersion { get; set; } = string.Empty;
         
         public abstract long Size { get; }
         public abstract string Extension { get; }

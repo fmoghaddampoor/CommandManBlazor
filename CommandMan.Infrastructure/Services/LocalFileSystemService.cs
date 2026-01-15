@@ -82,7 +82,8 @@ namespace CommandMan.Infrastructure.Services
                                 Name = file.Name,
                                 FullPath = file.FullName,
                                 LastModified = file.LastWriteTime,
-                                FileSize = file.Length
+                                FileSize = file.Length,
+                                FileVersion = FileVersionInfo.GetVersionInfo(file.FullName).FileVersion ?? string.Empty
                             });
                         }
                     }
