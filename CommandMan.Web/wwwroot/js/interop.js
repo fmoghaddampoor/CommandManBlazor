@@ -1,5 +1,10 @@
 window.registerKeyboardHandler = (dotNetHelper) => {
     window.commandManKeyHandler = (e) => {
+        // Skip if typing in an input or textarea
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
         // Blocks F-keys (F1-F12), ArrowUp, ArrowDown, Tab, Enter
         const isFKey = /^F[1-9][0-2]?$/.test(e.key);
         const commandKeys = ["ArrowUp", "ArrowDown", "Tab", "Enter"];
@@ -68,5 +73,11 @@ window.openAddFavoriteModal = () => {
 window.openManageFavoritesModal = () => {
     if (window.homeHelper) {
         window.homeHelper.invokeMethodAsync('OpenManageFavoritesModal');
+    }
+};
+
+window.selectInputText = (element) => {
+    if (element) {
+        element.select();
     }
 };

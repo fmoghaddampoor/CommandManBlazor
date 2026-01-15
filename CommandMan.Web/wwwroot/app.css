@@ -550,3 +550,27 @@ tr.drag-over {
     background-color: rgba(233, 69, 96, 0.2) !important;
     outline: 2px dashed var(--accent-color);
 }
+
+.path-edit-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--accent-color);
+    color: var(--text-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: 'Consolas', monospace;
+    outline: none;
+    margin-right: 10px;
+}
+
+.current-path {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.current-path:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
