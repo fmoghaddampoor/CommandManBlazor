@@ -1,4 +1,8 @@
 @echo off
+echo Closing existing application...
+taskkill /F /IM CommandMan.Tray.exe >nul 2>&1
+timeout /t 1 /nobreak >nul
+
 echo Publishing...
 powershell -ExecutionPolicy Bypass -File "publish.ps1"
 if %errorlevel% neq 0 (

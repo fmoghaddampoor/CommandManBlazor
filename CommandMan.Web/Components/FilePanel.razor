@@ -52,7 +52,7 @@
             }
         </div>
     </div>
-    <div class="file-list @(State.IsLoading ? "loading" : "")" id="@($"fileList_{State.GetHashCode()}")">
+    <div class="file-list @(State.IsLoading ? "loading" : "")" id="@($"fileList_{State.GetHashCode()}")" @onclick="OnBackgroundClick">
         @if (State.IsLoading)
         {
             <div class="loading-overlay">
@@ -63,17 +63,17 @@
         <table class="table table-sm table-hover file-table">
             <thead>
                 <tr>
-                    <th @onclick='() => State.Sort("Name")' class="sortable">Name @(RenderSortIndicator("Name"))</th>
-                    <th @onclick='() => State.Sort("Extension")' class="sortable">Extension @(RenderSortIndicator("Extension"))</th>
-                    <th @onclick='() => State.Sort("Date modified")' class="sortable">Date modified @(RenderSortIndicator("Date modified"))</th>
-                    <th @onclick='() => State.Sort("Size")' class="sortable">Size @(RenderSortIndicator("Size"))</th>
-                    <th @onclick='() => State.Sort("File version")' class="sortable">File version @(RenderSortIndicator("File version"))</th>
+                    <th @onclick='() => State.Sort("Name")' @onclick:stopPropagation class="sortable">Name @(RenderSortIndicator("Name"))</th>
+                    <th @onclick='() => State.Sort("Extension")' @onclick:stopPropagation class="sortable">Extension @(RenderSortIndicator("Extension"))</th>
+                    <th @onclick='() => State.Sort("Date modified")' @onclick:stopPropagation class="sortable">Date modified @(RenderSortIndicator("Date modified"))</th>
+                    <th @onclick='() => State.Sort("Size")' @onclick:stopPropagation class="sortable">Size @(RenderSortIndicator("Size"))</th>
+                    <th @onclick='() => State.Sort("File version")' @onclick:stopPropagation class="sortable">File version @(RenderSortIndicator("File version"))</th>
                 </tr>
             </thead>
             <tbody>
                 @if (State.CurrentPath != ParemptPath && !string.IsNullOrEmpty(State.CurrentPath))
                 {
-                     <tr @ondblclick="GoUp">
+                     <tr @ondblclick="GoUp" @onclick:stopPropagation>
                         <td><i class="fas fa-level-up-alt" style="margin-right:8px; color: var(--accent-color);"></i> [..]</td>
                         <td>&lt;DIR&gt;</td>
                         <td></td>
@@ -88,6 +88,7 @@
                         draggable="true"
                         @ondragstart="() => HandleDragStart(item)"
                         @onclick="(e) => SelectItem(e, item)"
+                        @onclick:stopPropagation
                         @ondblclick="() => OpenItem(item)"
                         data-index="@i">
                         <td>
@@ -289,6 +290,12 @@
     private void ToggleFavorites()
     {
         showFavorites = !showFavorites;
+    }
+
+    private void OnBackgroundClick()
+    {
+        ActivatePanel(); // Ensure panel is active
+        State.SelectedItems.Clear(); // Deselect all
     }
 
     private void ManageFavorites()

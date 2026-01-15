@@ -441,7 +441,17 @@
             default:
                 if (e.Key.Length == 1)
                 {
-                    AppState.ActivePanel.SeekItem(e.Key);
+                    if (e.CtrlKey && e.Key.Equals("a", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var all = AppState.ActivePanel.Items;
+                        AppState.ActivePanel.SelectedItems.Clear();
+                        foreach(var item in all) AppState.ActivePanel.SelectedItems.Add(item);
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        AppState.ActivePanel.SeekItem(e.Key);
+                    }
                 }
                 break;
         }
