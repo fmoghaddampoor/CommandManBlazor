@@ -49,7 +49,14 @@
             }
         </div>
     </div>
-    <div class="file-list" id="@($"fileList_{State.GetHashCode()}")">
+    <div class="file-list @(State.IsLoading ? "loading" : "")" id="@($"fileList_{State.GetHashCode()}")">
+        @if (State.IsLoading)
+        {
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Loading...</span>
+            </div>
+        }
         <table class="table table-sm table-hover file-table">
             <thead>
                 <tr>
@@ -178,8 +185,18 @@
 
     private async Task LoadData()
     {
-        State.Items = await FileService.GetDirectoryContentAsync(State.CurrentPath);
+        State.IsLoading = true;
         State.NotifyStateChanged();
+        try
+        {
+            State.Items = await FileService.GetDirectoryContentAsync(State.CurrentPath);
+            State.Sort(); // Keep current sort
+        }
+        finally
+        {
+            State.IsLoading = false;
+            State.NotifyStateChanged();
+        }
     }
 
     private async Task OpenItem(FileSystemItem item)

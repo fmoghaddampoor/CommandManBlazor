@@ -8,6 +8,7 @@ namespace CommandMan.Web.Services
     {
         public string CurrentPath { get; set; } = string.Empty;
         public List<FileSystemItem> Items { get; set; } = new();
+        public bool IsLoading { get; set; }
         public HashSet<FileSystemItem> SelectedItems { get; set; } = new();
         public FileSystemItem? SelectedItem { get; set; } // The "active" item/cursor
         private FileSystemItem? _pivotItem; // Shift-click start point
