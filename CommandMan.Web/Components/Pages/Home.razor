@@ -23,18 +23,22 @@
              @onclick="() => Activate(AppState.LeftPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.LeftPanel, path))" />
             <FilePanel State="@AppState.LeftPanel" 
+                       OtherPanelState="@AppState.RightPanel"
                        IsActive="@(AppState.ActivePanel == AppState.LeftPanel)" 
                        OnActivate="@(() => Activate(AppState.LeftPanel))"
-                       OnDropReceived="@(src => HandleDragMove(src, AppState.LeftPanel))" />
+                       OnDropReceived="@(src => HandleDragMove(src, AppState.LeftPanel))"
+                       OnLoadPath="@(path => SetPanelPath(AppState.LeftPanel, path))" />
         </div>
         
         <div class="file-panel @(AppState.ActivePanel == AppState.RightPanel ? "active" : "")" 
              @onclick="() => Activate(AppState.RightPanel)">
             <DrivePicker OnDriveSelected="@(path => SetPanelPath(AppState.RightPanel, path))" />
             <FilePanel State="@AppState.RightPanel" 
+                       OtherPanelState="@AppState.LeftPanel"
                        IsActive="@(AppState.ActivePanel == AppState.RightPanel)" 
                        OnActivate="@(() => Activate(AppState.RightPanel))"
-                       OnDropReceived="@(src => HandleDragMove(src, AppState.RightPanel))" />
+                       OnDropReceived="@(src => HandleDragMove(src, AppState.RightPanel))"
+                       OnLoadPath="@(path => SetPanelPath(AppState.RightPanel, path))" />
         </div>
     </div>
     

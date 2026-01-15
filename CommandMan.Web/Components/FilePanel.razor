@@ -31,6 +31,9 @@
             <span class="current-path" @onclick="StartEditingPath" title="Click to edit path">@State.CurrentPath</span>
         }
         <div class="header-buttons">
+            <button class="header-btn sync-btn" title="Load path from other panel" @onclick="LoadPathFromOtherPanel">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
             <button class="header-btn heart-btn" title="Add Favorite" @onclick="AddFavorite">
                 <i class="fas fa-heart"></i>
             </button>
@@ -132,9 +135,11 @@
 
 @code {
     [Parameter] public PanelState State { get; set; } = null!;
+    [Parameter] public PanelState? OtherPanelState { get; set; }
     [Parameter] public bool IsActive { get; set; }
     [Parameter] public EventCallback OnActivate { get; set; }
     [Parameter] public EventCallback<PanelState> OnDropReceived { get; set; }
+    [Parameter] public EventCallback<string> OnLoadPath { get; set; }
 
     private bool isDragOver = false;
     private int dragCounter = 0;
@@ -306,6 +311,16 @@
     {
         ActivatePanel();
         JSRuntime.InvokeVoidAsync("openAddFavoriteModal");
+    }
+
+    private async Task LoadPathFromOtherPanel()
+    {
+        if (OtherPanelState == null || string.IsNullOrEmpty(OtherPanelState.CurrentPath))
+        {
+            return;
+        }
+        
+        await OnLoadPath.InvokeAsync(OtherPanelState.CurrentPath);
     }
 
     private void ToggleFavorites()
