@@ -134,5 +134,33 @@ namespace CommandMan.Web.Services
                 SelectItem(nextItem);
             }
         }
+
+        public void SeekItem(string key)
+        {
+            if (Items.Count == 0 || string.IsNullOrEmpty(key)) return;
+
+            // Find all items starting with the key
+            var matches = Items
+                .Where(i => i.Name.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (matches.Count == 0) return;
+
+            FileSystemItem nextMatch;
+            if (SelectedItem != null && matches.Contains(SelectedItem))
+            {
+                // Already on a match, find the next one for cycling
+                int currentIndex = matches.IndexOf(SelectedItem);
+                int nextMatchIndex = (currentIndex + 1) % matches.Count;
+                nextMatch = matches[nextMatchIndex];
+            }
+            else
+            {
+                // Not on a match, pick the first one
+                nextMatch = matches[0];
+            }
+
+            SelectItem(nextMatch);
+        }
     }
 }

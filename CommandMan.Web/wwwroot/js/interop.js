@@ -8,8 +8,10 @@ window.registerKeyboardHandler = (dotNetHelper) => {
         // Blocks F-keys (F1-F12), ArrowUp, ArrowDown, Tab, Enter
         const isFKey = /^F[1-9][0-2]?$/.test(e.key);
         const commandKeys = ["ArrowUp", "ArrowDown", "Tab", "Enter"];
+        // Forward single character keys (a-z, 0-9, etc) for "seek-on-type"
+        const isCharKey = e.key.length === 1 && !e.ctrlKey && !e.altKey;
 
-        if (isFKey || commandKeys.includes(e.key)) {
+        if (isFKey || commandKeys.includes(e.key) || isCharKey) {
             e.preventDefault();
             dotNetHelper.invokeMethodAsync('HandleKeyDown', {
                 key: e.key,

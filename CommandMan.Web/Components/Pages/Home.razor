@@ -403,6 +403,12 @@
             case "F9":
                 await TriggerAction(ActionType.NewFile);
                 break;
+            default:
+                if (e.Key.Length == 1)
+                {
+                    AppState.ActivePanel.SeekItem(e.Key);
+                }
+                break;
         }
     }
 
