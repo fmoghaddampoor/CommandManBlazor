@@ -18,6 +18,9 @@
             <button class="header-btn list-btn" title="Favorites" @onclick="ToggleFavorites">
                 <i class="fas fa-list-ul"></i>
             </button>
+            <button class="header-btn manage-btn" title="Manage Favorites" @onclick="ManageFavorites">
+                <i class="fas fa-cog"></i>
+            </button>
             @if (showFavorites)
             {
                 <div class="favorites-menu">
@@ -217,6 +220,12 @@
     private void ToggleFavorites()
     {
         showFavorites = !showFavorites;
+    }
+
+    private void ManageFavorites()
+    {
+        ActivatePanel();
+        JSRuntime.InvokeVoidAsync("openManageFavoritesModal");
     }
 
     private async Task LoadFavorite(string path)

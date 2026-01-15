@@ -64,3 +64,9 @@ window.openAddFavoriteModal = () => {
         window.homeHelper.invokeMethodAsync('OpenAddFavoriteModal');
     }
 };
+
+window.openManageFavoritesModal = () => {
+    if (window.homeHelper) {
+        window.homeHelper.invokeMethodAsync('OpenManageFavoritesModal');
+    }
+};

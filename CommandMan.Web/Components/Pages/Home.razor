@@ -75,11 +75,58 @@
     </div>
 }
 
+@if (IsManageFavoritesVisible)
+{
+    <div class="modal-overlay">
+        <div class="modal-box" style="width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-title">Manage Favorites</div>
+            <div style="flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+                @if (FavoritesService.GetFavorites().Any())
+                {
+                    var favs = FavoritesService.GetFavorites();
+                    @for (int i = 0; i < favs.Count; i++)
+                    {
+                        var index = i;
+                        var fav = favs[i];
+                        <div class="manage-fav-item" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <input type="text" @bind="fav.Name" style="flex: 1; margin-bottom: 0;" placeholder="Name" />
+                                <div class="fav-actions" style="display: flex; gap: 4px;">
+                                    <button class="action-btn" @onclick="() => FavoritesService.MoveUp(index)" disabled="@(index == 0)" title="Move Up">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <button class="action-btn" @onclick="() => FavoritesService.MoveDown(index)" disabled="@(index == favs.Count - 1)" title="Move Down">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                    <button class="action-btn delete" @onclick="() => FavoritesService.RemoveFavorite(index)" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'Consolas', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@fav.Path">
+                                @fav.Path
+                            </span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color: var(--text-muted); text-align: center;">No favorites to manage.</p>
+                }
+            </div>
+            <div class="modal-buttons">
+                <button @onclick="CloseManageFavorites">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private DotNetObjectReference<Home>? dotNetHelper;
     
     // Modal State
     private bool IsModalVisible = false;
+    private bool IsManageFavoritesVisible = false;
     private string ModalTitle = "";
     private string ModalInputValue = "";
     private ActionType ModalAction;
@@ -360,6 +407,12 @@
         StateHasChanged();
     }
 
+    private void CloseManageFavorites()
+    {
+        IsManageFavoritesVisible = false;
+        StateHasChanged();
+    }
+
     private async Task SubmitModal()
     {
         Console.WriteLine($"SubmitModal: {ModalAction} to {ModalInputValue}");
@@ -544,6 +597,13 @@
     public void OpenAddFavoriteModal()
     {
         OpenModal(ActionType.AddFavorite);
+    }
+
+    [JSInvokable]
+    public void OpenManageFavoritesModal()
+    {
+        IsManageFavoritesVisible = true;
+        StateHasChanged();
     }
 
     [JSInvokable]

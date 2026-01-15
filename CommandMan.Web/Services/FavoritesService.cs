@@ -57,6 +57,46 @@ namespace CommandMan.Web.Services
             await SaveAsync();
         }
 
+        public async Task UpdateFavorite(int index, string name)
+        {
+            if (index >= 0 && index < _favorites.Count)
+            {
+                _favorites[index].Name = name;
+                await SaveAsync();
+            }
+        }
+
+        public async Task RemoveFavorite(int index)
+        {
+            if (index >= 0 && index < _favorites.Count)
+            {
+                _favorites.RemoveAt(index);
+                await SaveAsync();
+            }
+        }
+
+        public async Task MoveUp(int index)
+        {
+            if (index > 0 && index < _favorites.Count)
+            {
+                var item = _favorites[index];
+                _favorites.RemoveAt(index);
+                _favorites.Insert(index - 1, item);
+                await SaveAsync();
+            }
+        }
+
+        public async Task MoveDown(int index)
+        {
+            if (index >= 0 && index < _favorites.Count - 1)
+            {
+                var item = _favorites[index];
+                _favorites.RemoveAt(index);
+                _favorites.Insert(index + 1, item);
+                await SaveAsync();
+            }
+        }
+
         public async Task RemoveFavorite(string name)
         {
             _favorites.RemoveAll(f => f.Name == name);
