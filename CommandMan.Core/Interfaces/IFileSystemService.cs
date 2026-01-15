@@ -15,6 +15,7 @@ namespace CommandMan.Core.Interfaces
         Task CopyItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
         Task MoveItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
         Task ZipItemsAsync(List<string> sourcePaths, string destinationZipPath, System.IO.Compression.CompressionLevel compressionLevel);
+        Task UnzipItemAsync(string zipFilePath, string destinationPath);
         Task OpenFileAsync(string path);
         string GetParentPath(string path);
     }

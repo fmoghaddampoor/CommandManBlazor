@@ -52,6 +52,7 @@
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Delete)">F8 Delete</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.NewFile)">F9 NewFile</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Zip)">F10 Zip</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Unzip)">F11 Unzip</div>
     </div>
 </div>
 
@@ -77,6 +78,13 @@
                          </select>
                      </div>
                  </div>
+             }
+             else if (ModalAction == ActionType.Unzip)
+             {
+                  <div class="input-group">
+                      <label>Extract to Folder Name</label>
+                      <input @bind="ModalInputValue" id="modalInput" autofocus />
+                  </div>
              }
              else if (ModalAction == ActionType.Delete)
              {
@@ -239,7 +247,7 @@
     
     private string ZipCompressionLevel = "Optimal";
 
-    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite, Zip }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite, Zip, Unzip }
 
     protected override void OnInitialized()
     {
@@ -427,6 +435,9 @@
             case "F10":
                 await TriggerAction(ActionType.Zip);
                 break;
+            case "F11":
+                await TriggerAction(ActionType.Unzip);
+                break;
             default:
                 if (e.Key.Length == 1)
                 {
@@ -459,6 +470,7 @@
             case ActionType.Delete:
             case ActionType.NewFile:
             case ActionType.Zip:
+            case ActionType.Unzip:
                 OpenModal(action);
                 break;
         }
@@ -514,6 +526,18 @@
                 ModalTitle = "Pack " + selectedName + " to zip";
                 ModalInputValue = "archive.zip";
                 break;
+            case ActionType.Unzip:
+                ModalTitle = "Unzip " + selectedName;
+                if (AppState.ActivePanel.SelectedItem != null && AppState.ActivePanel.SelectedItem.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModalInputValue = System.IO.Path.GetFileNameWithoutExtension(AppState.ActivePanel.SelectedItem.Name);
+                }
+                else
+                {
+                    ModalInputValue = "New Folder";
+                }
+                break;
+
         }
         StateHasChanged();
     }
@@ -825,6 +849,31 @@
                         }
                     }
                     break;
+
+                case ActionType.Unzip:
+                     if (active.SelectedItem != null && active.SelectedItem.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                     {
+                         ProgressState.Start("Unzipping...");
+                         var zipPath = active.SelectedItem.FullPath;
+                         var destFolder = System.IO.Path.Combine(targetPanel.CurrentPath, ModalInputValue);
+                         
+                         await FileService.UnzipItemAsync(zipPath, destFolder);
+                         
+                         ProgressState.Stop();
+                         await ReloadPanel(targetPanel);
+                         
+                         // Select the new folder in passive panel
+                         var newFolderItem = targetPanel.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
+                         if (newFolderItem != null)
+                         {
+                             targetPanel.SelectItem(newFolderItem);
+                             targetPanel.NotifyStateChanged();
+                                 
+                             // Activate target to show result
+                             AppState.SetActivePanel(targetPanel);
+                         }
+                     }
+                     break;
             }
         }
         catch (Exception ex)

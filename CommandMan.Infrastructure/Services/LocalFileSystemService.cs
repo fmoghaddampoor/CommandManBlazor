@@ -263,6 +263,19 @@ namespace CommandMan.Infrastructure.Services
             });
         }
 
+        public async Task UnzipItemAsync(string zipFilePath, string destinationPath)
+        {
+            await Task.Run(() =>
+            {
+                if (!Directory.Exists(destinationPath))
+                {
+                    Directory.CreateDirectory(destinationPath);
+                }
+                // Requires System.IO.Compression.ZipFile
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipFilePath, destinationPath, true);
+            });
+        }
+
         public Task OpenFileAsync(string path)
         {
             return Task.Run(() =>
