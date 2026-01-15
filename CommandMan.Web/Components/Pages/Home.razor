@@ -77,52 +77,80 @@
 
 @if (IsManageFavoritesVisible)
 {
+    var flatItems = GetFlatFavorites();
     <div class="modal-overlay">
-        <div class="modal-box" style="width: 650px; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-box" style="width: 750px; max-height: 85vh; display: flex; flex-direction: column;">
             <div class="modal-title">Manage Favorites</div>
             
             <div class="fav-toolbar" style="display: flex; gap: 8px; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;">
-                <button class="action-btn" @onclick="MoveFavUp" disabled="@(selectedFavoriteIndex <= 0 || !FavoritesService.GetFavorites().Any())" title="Move Up">
+                <button class="action-btn" @onclick="MoveFavUp" disabled="@(selectedFavoriteIndex <= 0 || !flatItems.Any())" title="Move Up">
                     <i class="fas fa-arrow-up"></i>
                 </button>
-                <button class="action-btn" @onclick="MoveFavDown" disabled="@(selectedFavoriteIndex == -1 || selectedFavoriteIndex >= FavoritesService.GetFavorites().Count - 1)" title="Move Down">
+                <button class="action-btn" @onclick="MoveFavDown" disabled="@(selectedFavoriteIndex == -1 || selectedFavoriteIndex >= flatItems.Count - 1)" title="Move Down">
                     <i class="fas fa-arrow-down"></i>
                 </button>
+                <button class="action-btn" @onclick="AddNewFolder" title="Add Folder">
+                    <i class="fas fa-folder-plus"></i>
+                </button>
+                <div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: var(--text-muted); font-size: 0.8rem;">
+                    <i class="fas fa-info-circle" style="margin-right: 5px;"></i> Drag to move into folders
+                </div>
                 <button class="action-btn delete" @onclick="DeleteSelectedFav" disabled="@(selectedFavoriteIndex == -1)" title="Delete Selected">
                     <i class="fas fa-trash"></i>
                 </button>
-                <div style="flex: 1"></div>
             </div>
 
             <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px;">
                 <table class="file-table" style="width: 100%; border-collapse: separate; border-spacing: 0;">
                     <thead style="position: sticky; top: 0; background: var(--header-bg); z-index: 10;">
                         <tr>
-                            <th style="width: 40%; border-bottom: 1px solid var(--border-color);">Name</th>
-                            <th style="border-bottom: 1px solid var(--border-color);">Path</th>
+                            <th style="width: 50%; border-bottom: 1px solid var(--border-color);">Name</th>
+                            <th style="border-bottom: 1px solid var(--border-color);">Path / Type</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (FavoritesService.GetFavorites().Any())
+                        @if (flatItems.Any())
                         {
-                            var favs = FavoritesService.GetFavorites();
-                            @for (int i = 0; i < favs.Count; i++)
+                            @for (int i = 0; i < flatItems.Count; i++)
                             {
                                 var index = i;
-                                var fav = favs[index];
-                                <tr class="@(selectedFavoriteIndex == index ? "selected" : "")" 
+                                var flat = flatItems[index];
+                                <tr class="@(selectedFavoriteIndex == index ? "selected" : "") @(dragOverIndex == index ? "drag-over" : "")" 
                                     @onclick="() => selectedFavoriteIndex = index"
-                                    style="cursor: pointer;">
-                                    <td style="padding: 4px 8px;">
-                                        <input type="text" @bind="fav.Name" 
-                                               @onclick:stopPropagation
-                                               class="grid-input"
-                                               style="width: 100%; padding: 4px 6px; background: transparent; border: 1px solid transparent; color: inherit; outline: none;" />
+                                    draggable="true"
+                                    @ondragstart="() => HandleDragStart(index)"
+                                    @ondragover="() => HandleDragOver(index)"
+                                    @ondragleave="() => dragOverIndex = -1"
+                                    @ondrop="() => HandleDrop(index)"
+                                    @ondragover:preventDefault
+                                    style="cursor: grab;">
+                                    <td style="padding: 4px 8px; padding-left: @(flat.Level * 24 + 12)px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            @if (flat.Item.IsFolder)
+                                            {
+                                                <i class="fas fa-folder text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-star text-accent" style="color: var(--accent-color)"></i>
+                                            }
+                                            <input type="text" @bind="flat.Item.Name" 
+                                                   @onclick:stopPropagation
+                                                   class="grid-input"
+                                                   style="flex: 1; padding: 4px 6px; background: transparent; border: 1px solid transparent; color: inherit; outline: none;" />
+                                        </div>
                                     </td>
                                     <td style="padding: 4px 8px; font-family: 'Consolas', monospace; font-size: 0.8rem; color: var(--text-muted);">
-                                        <div style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@fav.Path">
-                                            @fav.Path
-                                        </div>
+                                        @if (flat.Item.IsFolder)
+                                        {
+                                            <span>[Folder]</span>
+                                        }
+                                        else
+                                        {
+                                            <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@flat.Item.Path">
+                                                @flat.Item.Path
+                                            </div>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -150,6 +178,8 @@
     private bool IsModalVisible = false;
     private bool IsManageFavoritesVisible = false;
     private int selectedFavoriteIndex = -1;
+    private int draggedIndex = -1;
+    private int dragOverIndex = -1;
     private string ModalTitle = "";
     private string ModalInputValue = "";
     private ActionType ModalAction;
@@ -439,32 +469,121 @@
 
     private async Task MoveFavUp()
     {
+        var flatItems = GetFlatFavorites();
         if (selectedFavoriteIndex > 0)
         {
-            await FavoritesService.MoveUp(selectedFavoriteIndex);
-            selectedFavoriteIndex--;
+             var current = flatItems[selectedFavoriteIndex];
+             var list = current.CurrentList;
+             int indexInList = list.IndexOf(current.Item);
+             if (indexInList > 0)
+             {
+                 var item = list[indexInList];
+                 list.RemoveAt(indexInList);
+                 list.Insert(indexInList - 1, item);
+                 await FavoritesService.SaveAsync();
+             }
         }
     }
 
     private async Task MoveFavDown()
     {
-        var favs = FavoritesService.GetFavorites();
-        if (selectedFavoriteIndex >= 0 && selectedFavoriteIndex < favs.Count - 1)
+        var flatItems = GetFlatFavorites();
+        if (selectedFavoriteIndex >= 0 && selectedFavoriteIndex < flatItems.Count - 1)
         {
-            await FavoritesService.MoveDown(selectedFavoriteIndex);
-            selectedFavoriteIndex++;
+             var current = flatItems[selectedFavoriteIndex];
+             var list = current.CurrentList;
+             int indexInList = list.IndexOf(current.Item);
+             if (indexInList >= 0 && indexInList < list.Count - 1)
+             {
+                 var item = list[indexInList];
+                 list.RemoveAt(indexInList);
+                 list.Insert(indexInList + 1, item);
+                 await FavoritesService.SaveAsync();
+             }
         }
+    }
+
+    private void HandleDragStart(int index)
+    {
+        draggedIndex = index;
+    }
+
+    private void HandleDragOver(int index)
+    {
+        if (draggedIndex != index)
+        {
+            dragOverIndex = index;
+        }
+    }
+
+    private async Task HandleDrop(int targetIndex)
+    {
+        if (draggedIndex == -1 || draggedIndex == targetIndex) return;
+
+        var flatItems = GetFlatFavorites();
+        var source = flatItems[draggedIndex];
+        var target = flatItems[targetIndex];
+
+        if (target.Item.IsFolder)
+        {
+            await FavoritesService.MoveToFolder(source.Item, source.CurrentList, target.Item);
+        }
+        else if (target.Level == 0 && source.Level > 0)
+        {
+            // Drop on a root item to move out of current folder and into root
+            await FavoritesService.MoveToRoot(source.Item, source.CurrentList);
+        }
+
+        draggedIndex = -1;
+        dragOverIndex = -1;
+        StateHasChanged();
+    }
+
+    private async Task AddNewFolder()
+    {
+        await FavoritesService.AddFolder("New Folder");
     }
 
     private async Task DeleteSelectedFav()
     {
+        var flatItems = GetFlatFavorites();
         if (selectedFavoriteIndex >= 0)
         {
-            await FavoritesService.RemoveFavorite(selectedFavoriteIndex);
-            var favs = FavoritesService.GetFavorites();
-            if (selectedFavoriteIndex >= favs.Count)
+            var current = flatItems[selectedFavoriteIndex];
+            current.CurrentList.Remove(current.Item);
+            await FavoritesService.SaveAsync();
+            
+            var newFlat = GetFlatFavorites();
+            if (selectedFavoriteIndex >= newFlat.Count)
             {
-                selectedFavoriteIndex = favs.Count - 1;
+                selectedFavoriteIndex = newFlat.Count - 1;
+            }
+        }
+    }
+
+    private class FlatFav
+    {
+        public FavoriteItem Item { get; set; } = null!;
+        public List<FavoriteItem> CurrentList { get; set; } = null!;
+        public List<FavoriteItem>? ParentList { get; set; }
+        public int Level { get; set; }
+    }
+
+    private List<FlatFav> GetFlatFavorites()
+    {
+        var result = new List<FlatFav>();
+        Flatten(FavoritesService.GetFavorites(), null, 0, result);
+        return result;
+    }
+
+    private void Flatten(List<FavoriteItem> items, List<FavoriteItem>? parentList, int level, List<FlatFav> result)
+    {
+        foreach (var item in items)
+        {
+            result.Add(new FlatFav { Item = item, CurrentList = items, ParentList = parentList, Level = level });
+            if (item.IsFolder)
+            {
+                Flatten(item.Children, items, level + 1, result);
             }
         }
     }

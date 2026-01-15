@@ -97,6 +97,71 @@ namespace CommandMan.Web.Services
             }
         }
 
+        public async Task AddFolder(string name)
+        {
+            _favorites.Add(new FavoriteItem { Name = name, IsFolder = true });
+            await SaveAsync();
+        }
+
+        public async Task MoveRight(FavoriteItem item, List<FavoriteItem> currentList)
+        {
+            int index = currentList.IndexOf(item);
+            if (index > 0)
+            {
+                var targetFolder = currentList[index - 1];
+                if (targetFolder.IsFolder)
+                {
+                    currentList.RemoveAt(index);
+                    targetFolder.Children.Add(item);
+                    await SaveAsync();
+                }
+            }
+        }
+
+        public async Task MoveLeft(FavoriteItem item, List<FavoriteItem> currentList, List<FavoriteItem>? parentList)
+        {
+            if (parentList != null)
+            {
+                int indexInParent = parentList.FindIndex(f => f.Children == currentList);
+                if (indexInParent != -1)
+                {
+                    currentList.Remove(item);
+                    parentList.Insert(indexInParent + 1, item);
+                    await SaveAsync();
+                }
+            }
+        }
+
+        public async Task MoveToFolder(FavoriteItem item, List<FavoriteItem> sourceList, FavoriteItem targetFolder)
+        {
+            if (item != targetFolder && targetFolder.IsFolder && !IsDescendant(item, targetFolder))
+            {
+                sourceList.Remove(item);
+                targetFolder.Children.Add(item);
+                await SaveAsync();
+            }
+        }
+
+        public async Task MoveToRoot(FavoriteItem item, List<FavoriteItem> sourceList)
+        {
+            if (_favorites != sourceList)
+            {
+                sourceList.Remove(item);
+                _favorites.Add(item);
+                await SaveAsync();
+            }
+        }
+
+        private bool IsDescendant(FavoriteItem parent, FavoriteItem potentialDescendant)
+        {
+            if (parent.Children.Contains(potentialDescendant)) return true;
+            foreach (var child in parent.Children)
+            {
+                if (child.IsFolder && IsDescendant(child, potentialDescendant)) return true;
+            }
+            return false;
+        }
+
         public async Task RemoveFavorite(string name)
         {
             _favorites.RemoveAll(f => f.Name == name);

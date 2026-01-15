@@ -26,13 +26,7 @@
                 <div class="favorites-menu">
                     @if (FavoritesService.GetFavorites().Any())
                     {
-                        @foreach (var fav in FavoritesService.GetFavorites())
-                        {
-                            <div class="menu-item" @onclick="() => LoadFavorite(fav.Path)">
-                                <i class="fas fa-star text-warning" style="margin-right:8px;"></i>
-                                <span>@fav.Name</span>
-                            </div>
-                        }
+                        @RenderFavorites(FavoritesService.GetFavorites())
                     }
                     else
                     {
@@ -235,6 +229,31 @@
         await LoadData();
         ActivatePanel();
     }
+
+    private RenderFragment RenderFavorites(List<FavoriteItem> items) => __builder =>
+    {
+        foreach (var fav in items)
+        {
+            if (fav.IsFolder)
+            {
+                <div class="menu-item folder-item">
+                    <i class="fas fa-folder text-warning" style="margin-right:8px;"></i>
+                    <span style="flex: 1">@fav.Name</span>
+                    <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 8px;"></i>
+                    <div class="submenu">
+                        @RenderFavorites(fav.Children)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="menu-item" @onclick="() => LoadFavorite(fav.Path)">
+                    <i class="fas fa-star" style="margin-right:8px; color: var(--accent-color);"></i>
+                    <span>@fav.Name</span>
+                </div>
+            }
+        }
+    };
 
     private string FormatSize(long bytes)
     {
