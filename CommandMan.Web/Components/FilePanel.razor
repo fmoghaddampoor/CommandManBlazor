@@ -293,6 +293,12 @@
         }
         else
         {
+            // Capitalize drive letter (e.g. c:\ -> C:\)
+            if (tempPath.Length >= 2 && char.IsLetter(tempPath[0]) && tempPath[1] == ':')
+            {
+                tempPath = char.ToUpper(tempPath[0]) + tempPath.Substring(1);
+            }
+
             // Normalize: remove trailing slash except for drive root
             if (tempPath.Length > 3 && (tempPath.EndsWith("\\") || tempPath.EndsWith("/")))
             {
