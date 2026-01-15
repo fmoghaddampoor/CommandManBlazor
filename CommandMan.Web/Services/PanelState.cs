@@ -12,9 +12,48 @@ namespace CommandMan.Web.Services
         public FileSystemItem? SelectedItem { get; set; } // The "active" item/cursor
         private FileSystemItem? _pivotItem; // Shift-click start point
         
+        public string SortColumn { get; set; } = "Name";
+        public bool SortAscending { get; set; } = true;
+
         public event Action? OnChange;
 
         public void NotifyStateChanged() => OnChange?.Invoke();
+
+        public void Sort(string column = "")
+        {
+            if (!string.IsNullOrEmpty(column))
+            {
+                if (SortColumn == column)
+                {
+                    SortAscending = !SortAscending;
+                }
+                else
+                {
+                    SortColumn = column;
+                    SortAscending = true;
+                }
+            }
+
+            Items.Sort((a, b) =>
+            {
+                // Rule: Directories always at top
+                if (a is DirectoryItem && b is FileItem) return -1;
+                if (a is FileItem && b is DirectoryItem) return 1;
+
+                int result = SortColumn switch
+                {
+                    "Extension" => string.Compare(a.Extension, b.Extension, StringComparison.OrdinalIgnoreCase),
+                    "Date modified" => a.LastModified.CompareTo(b.LastModified),
+                    "Size" => a.Size.CompareTo(b.Size),
+                    "File version" => string.Compare(a.FileVersion, b.FileVersion, StringComparison.OrdinalIgnoreCase),
+                    _ => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase)
+                };
+
+                return SortAscending ? result : -result;
+            });
+
+            NotifyStateChanged();
+        }
 
         public void SelectItem(FileSystemItem? item, bool clearExisting = true, bool toggle = false, bool range = false)
         {

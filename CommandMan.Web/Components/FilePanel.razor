@@ -53,11 +53,11 @@
         <table class="table table-sm table-hover file-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Extension</th>
-                    <th>Date modified</th>
-                    <th>Size</th>
-                    <th>File version</th>
+                    <th @onclick='() => State.Sort("Name")' class="sortable">Name @(RenderSortIndicator("Name"))</th>
+                    <th @onclick='() => State.Sort("Extension")' class="sortable">Extension @(RenderSortIndicator("Extension"))</th>
+                    <th @onclick='() => State.Sort("Date modified")' class="sortable">Date modified @(RenderSortIndicator("Date modified"))</th>
+                    <th @onclick='() => State.Sort("Size")' class="sortable">Size @(RenderSortIndicator("Size"))</th>
+                    <th @onclick='() => State.Sort("File version")' class="sortable">File version @(RenderSortIndicator("File version"))</th>
                 </tr>
             </thead>
             <tbody>
@@ -402,6 +402,14 @@
             _ => "fas fa-file"
         };
     }
+
+    private RenderFragment RenderSortIndicator(string column) => __builder =>
+    {
+        if (State.SortColumn == column)
+        {
+            <i class='fas @(State.SortAscending ? "fa-sort-up" : "fa-sort-down")' style="margin-left: 5px; color: var(--accent-color);"></i>
+        }
+    };
     
     // Auto-scroll is now handled in the main OnAfterRenderAsync above
 }

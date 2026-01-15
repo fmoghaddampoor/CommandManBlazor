@@ -574,3 +574,13 @@ tr.drag-over {
 .current-path:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.sortable:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
