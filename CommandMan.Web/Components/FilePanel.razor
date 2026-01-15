@@ -19,6 +19,9 @@
                    @bind:event="oninput"
                    @onkeydown="HandlePathKeyDown"
                    @onblur="CancelEditingPath" />
+            <button class="action-btn" style="margin-right: 10px;" title="Go to path" @onclick="SubmitPath" @onmousedown:preventDefault @onmousedown:stopPropagation>
+                <i class="fas fa-check"></i>
+            </button>
         }
         else
         {
