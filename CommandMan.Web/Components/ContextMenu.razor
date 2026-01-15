@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@if (Visible)
+{
+    // Overlay to close menu on click outside
+    <div class="context-menu-overlay" @onclick="OnClose" @oncontextmenu:preventDefault @oncontextmenu="OnClose"></div>
+    
+    <div class="context-menu" style="left: @(X)px; top: @(Y)px;">
+        @foreach (var item in Items)
+        {
+            @if (item.IsSeparator)
+            {
+                <div class="context-menu-separator"></div>
+            }
+            else
+            {
+                <div class="context-menu-item @(item.Disabled ? "disabled" : "")" @onclick="() => OnItemClick(item)">
+                    @if (!string.IsNullOrEmpty(item.IconClass))
+                    {
+                        <i class="@item.IconClass context-menu-icon" style="@(item.IconColor != null ? $"color:{item.IconColor}" : "")"></i>
+                    }
+                    <span>@item.Label</span>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public double X { get; set; }
+    [Parameter] public double Y { get; set; }
+    [Parameter] public List<MenuAction> Items { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<MenuAction> OnAction { get; set; }
+
+    private async Task OnItemClick(MenuAction item)
+    {
+        if (item.Disabled) return;
+        await OnAction.InvokeAsync(item);
+        await OnClose.InvokeAsync();
+    }
+
+    public class MenuAction
+    {
+        public string Label { get; set; } = "";
+        public string IconClass { get; set; } = "";
+        public string? IconColor { get; set; }
+        public Action? Action { get; set; }
+        public bool IsSeparator { get; set; }
+        public bool Disabled { get; set; }
+        public string? Id { get; set; }
+    }
+}

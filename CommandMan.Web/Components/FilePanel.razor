@@ -3,11 +3,14 @@
 @using CommandMan.Web.Services
 @inject IFileSystemService FileService
 @inject FavoritesService FavoritesService
+@inject ClipboardService ClipboardService
 @inject IJSRuntime JSRuntime
 
 <div class="file-list-container @(isDragOver ? "drag-over" : "")" 
      id="@panelId"
      @onclick="ActivatePanel"
+     @oncontextmenu:preventDefault
+     @oncontextmenu="(e) => ShowBackgroundContextMenu(e)"
      @ref="panelContainer">
     <div class="panel-header">
         @if (isEditingPath)
@@ -89,6 +92,9 @@
                         @ondragstart="() => HandleDragStart(item)"
                         @onclick="(e) => SelectItem(e, item)"
                         @onclick:stopPropagation
+                        @oncontextmenu="(e) => ShowItemContextMenu(e, item)"
+                        @oncontextmenu:preventDefault
+                        @oncontextmenu:stopPropagation
                         @ondblclick="() => OpenItem(item)"
                         data-index="@i">
                         <td>
@@ -117,6 +123,13 @@
     </div>
 </div>
 
+<ContextMenu Visible="@IsContextMenuVisible" 
+             X="@ContextMenuX" 
+             Y="@ContextMenuY" 
+             Items="@ContextMenuItems" 
+             OnClose="CloseContextMenu" 
+             OnAction="ExecuteMenuAction" />
+
 @code {
     [Parameter] public PanelState State { get; set; } = null!;
     [Parameter] public bool IsActive { get; set; }
@@ -133,6 +146,14 @@
     private ElementReference panelContainer;
     private DotNetObjectReference<FilePanel>? dotNetRef;
     private string panelId => $"panel_{State.GetHashCode()}";
+
+    // Context Menu State
+    private bool IsContextMenuVisible;
+    private double ContextMenuX;
+    private double ContextMenuY;
+    private List<ContextMenu.MenuAction> ContextMenuItems = new();
+
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -463,5 +484,131 @@
         }
     };
     
-    // Auto-scroll is now handled in the main OnAfterRenderAsync above
+    private void ShowItemContextMenu(MouseEventArgs e, FileSystemItem item)
+    {
+        ActivatePanel();
+        if (!State.SelectedItems.Contains(item))
+        {
+            State.SelectItem(item);
+        }
+
+        ContextMenuItems = new List<ContextMenu.MenuAction>
+        {
+            new ContextMenu.MenuAction { Label = "Copy", IconClass = "fas fa-copy", Action = () => CopyItems() },
+            new ContextMenu.MenuAction { Label = "Cut", IconClass = "fas fa-cut", Action = () => CutItems() },
+            new ContextMenu.MenuAction { IsSeparator = true },
+            new ContextMenu.MenuAction { Label = "Delete", IconClass = "fas fa-trash", IconColor = "#ff4d4d", Action = () => DeleteItems() },
+        };
+
+        ContextMenuX = e.ClientX;
+        ContextMenuY = e.ClientY;
+        IsContextMenuVisible = true;
+    }
+
+    private void ShowBackgroundContextMenu(MouseEventArgs e)
+    {
+        ActivatePanel();
+        
+        var canPaste = ClipboardService.Items.Any();
+        ContextMenuItems = new List<ContextMenu.MenuAction>
+        {
+            new ContextMenu.MenuAction { Label = "Paste", IconClass = "fas fa-paste", Disabled = !canPaste, Action = () => PasteItems() },
+             new ContextMenu.MenuAction { IsSeparator = true },
+            new ContextMenu.MenuAction { Label = "New Folder", IconClass = "fas fa-folder-plus", Action = () => TriggerAction(ActionType.MkDir) },
+            new ContextMenu.MenuAction { Label = "New File", IconClass = "fas fa-file-medical", Action = () => TriggerAction(ActionType.NewFile) },
+        };
+
+        ContextMenuX = e.ClientX;
+        ContextMenuY = e.ClientY;
+        IsContextMenuVisible = true;
+    }
+
+    private void CloseContextMenu()
+    {
+        IsContextMenuVisible = false;
+        StateHasChanged();
+    }
+
+    private void ExecuteMenuAction(ContextMenu.MenuAction action)
+    {
+        action.Action?.Invoke();
+    }
+
+    private void CopyItems()
+    {
+        ClipboardService.Copy(State.SelectedItems);
+    }
+
+    private void CutItems()
+    {
+        ClipboardService.Cut(State.SelectedItems);
+    }
+
+    private void DeleteItems()
+    {
+        // Simulate F8 key press to trigger delete logic in Home.razor
+        _ = JSRuntime.InvokeVoidAsync("eval", "window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'F8'}))");
+    }
+
+    private async Task PasteItems()
+    {
+        if (!ClipboardService.Items.Any()) return;
+
+        var sourceItems = ClipboardService.Items;
+        var isCut = ClipboardService.IsCut;
+        var destPath = State.CurrentPath;
+
+        // Perform operation
+        // Logic similar to Home.razor SubmitModal for Copy/Move but automated
+        
+        // We need ProgressService from DI? Not injected here.
+        // And FileService is here.
+        
+        // This logic is overlapping with Home.razor logic. 
+        // Ideally should be centralized.
+        // For now, let's implement basic paste here using FileService.
+        
+        foreach (var item in sourceItems)
+        {
+            var dest = System.IO.Path.Combine(destPath, item.Name);
+            if (isCut)
+                await FileService.MoveItemAsync(item.FullPath, dest);
+            else
+                await FileService.CopyItemAsync(item.FullPath, dest);
+        }
+        
+        if (isCut) ClipboardService.Clear();
+        
+        await LoadData();
+        // Refresh other panel? We don't have ref to other panel here. 
+        // AppState change should trigger Home refresh?
+        // AppState.LeftPanel.OnChange... relies on Home implementation.
+        // We should notify state changed.
+        State.NotifyStateChanged(); 
+        
+        // NOTE: If we move from other panel, we should ideally refresh that panel too.
+        // But from here we only know our State.
+        // Maybe we should invoke global refresh via AppState?
+        // AppState doesn't have "RefreshAll".
+        // But if we moved files, the other panel might show incorrect data until refreshed.
+        // Just triggering AppState.OnChange might be enough if Home subscribed.
+        // Home subscribes and calls StateHasChanged, but doesn't reload data automatically unless paths change.
+        // We need a way to request Reload.
+        // Let's leave it for now, manual refresh (F5 or navigation) might be needed for source panel.
+    }
+
+    private void TriggerAction(ActionType action)
+    {
+        // Map to F-Keys for Home to handle
+         string key = action switch 
+         {
+             ActionType.MkDir => "F7",
+             ActionType.NewFile => "F9",
+             _ => ""
+         };
+         if (!string.IsNullOrEmpty(key))
+            _ = JSRuntime.InvokeVoidAsync("eval", $"window.dispatchEvent(new KeyboardEvent('keydown', {{'key': '{key}'}}))");
+    }
+
+    private enum ActionType { MkDir, NewFile }
 }

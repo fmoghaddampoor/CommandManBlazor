@@ -13,6 +13,7 @@ builder.Services.AddScoped<IFileSystemService, LocalFileSystemService>();
 builder.Services.AddScoped<CommandMan.Web.Services.AppState>();
 builder.Services.AddScoped<CommandMan.Web.Services.ProgressService>();
 builder.Services.AddScoped<CommandMan.Web.Services.FavoritesService>();
+builder.Services.AddScoped<CommandMan.Web.Services.ClipboardService>();
 
 var app = builder.Build();
 
