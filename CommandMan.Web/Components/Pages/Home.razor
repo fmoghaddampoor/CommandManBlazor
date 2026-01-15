@@ -9,6 +9,7 @@
 @inject IFileSystemService FileService
 @inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
 @inject NavigationManager Navigation
+@inject FavoritesService FavoritesService
 @implements IAsyncDisposable
 
 <PageTitle>CommandMan</PageTitle>
@@ -88,7 +89,7 @@
     private int leftDragCounter = 0;
     private int rightDragCounter = 0;
 
-    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite }
 
     protected override void OnInitialized()
     {
@@ -112,7 +113,13 @@
             if (firstRender)
             {
                 dotNetHelper = DotNetObjectReference.Create(this);
-                try { await JS.InvokeVoidAsync("registerKeyboardHandler", dotNetHelper); } catch {}
+                try { 
+                    await JS.InvokeVoidAsync("registerKeyboardHandler", dotNetHelper); 
+                    await JS.InvokeVoidAsync("setHomeHelper", dotNetHelper);
+                } catch {}
+                
+                // Load favorites
+                await FavoritesService.LoadAsync();
                 
                 // Load state or Defaults
                 await LoadState();
@@ -315,9 +322,15 @@
         var passive = AppState.ActivePanel == AppState.LeftPanel ? AppState.RightPanel : AppState.LeftPanel;
         var selectedCount = AppState.ActivePanel.SelectedItems.Count;
         var selectedName = selectedCount > 1 ? $"{selectedCount} items" : (AppState.ActivePanel.SelectedItem?.Name ?? "");
+        var activePath = AppState.ActivePanel.CurrentPath;
 
         switch (action)
         {
+            case ActionType.AddFavorite:
+                ModalTitle = "Add Favorite Path";
+                ModalInputValue = System.IO.Path.GetFileName(activePath.TrimEnd('\\'));
+                if (string.IsNullOrEmpty(ModalInputValue)) ModalInputValue = activePath;
+                break;
             case ActionType.MkDir:
                 ModalTitle = "Create Directory";
                 ModalInputValue = "";
@@ -372,6 +385,12 @@
 
             switch (ModalAction)
             {
+                case ActionType.AddFavorite:
+                    if (!string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                        await FavoritesService.AddFavorite(ModalInputValue, active.CurrentPath);
+                    }
+                    break;
                 case ActionType.MkDir:
                     if (!string.IsNullOrWhiteSpace(ModalInputValue))
                     {
@@ -518,7 +537,19 @@
 
     private async Task Log(string msg)
     {
-        try { await JS.InvokeVoidAsync("console.log", "[D&D Debug] " + msg); } catch {}
+        try { await JS.InvokeVoidAsync("console.log", "[Debug] " + msg); } catch {}
+    }
+
+    [JSInvokable]
+    public void OpenAddFavoriteModal()
+    {
+        OpenModal(ActionType.AddFavorite);
+    }
+
+    [JSInvokable]
+    public async Task LoadFavoritePath(string path)
+    {
+        await SetPanelPath(AppState.ActivePanel, path);
     }
 }
 

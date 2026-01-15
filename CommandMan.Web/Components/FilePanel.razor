@@ -2,6 +2,7 @@
 @using CommandMan.Core.Interfaces
 @using CommandMan.Web.Services
 @inject IFileSystemService FileService
+@inject FavoritesService FavoritesService
 @inject IJSRuntime JSRuntime
 
 <div class="file-list-container @(isDragOver ? "drag-over" : "")" 
@@ -10,6 +11,33 @@
      @ref="panelContainer">
     <div class="panel-header">
         <span class="current-path">@State.CurrentPath</span>
+        <div class="header-buttons">
+            <button class="header-btn heart-btn" title="Add Favorite" @onclick="AddFavorite">
+                <i class="fas fa-heart"></i>
+            </button>
+            <button class="header-btn list-btn" title="Favorites" @onclick="ToggleFavorites">
+                <i class="fas fa-list-ul"></i>
+            </button>
+            @if (showFavorites)
+            {
+                <div class="favorites-menu">
+                    @if (FavoritesService.GetFavorites().Any())
+                    {
+                        @foreach (var fav in FavoritesService.GetFavorites())
+                        {
+                            <div class="menu-item" @onclick="() => LoadFavorite(fav.Path)">
+                                <i class="fas fa-star text-warning" style="margin-right:8px;"></i>
+                                <span>@fav.Name</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="menu-item disabled">No favorites yet</div>
+                    }
+                </div>
+            }
+        </div>
     </div>
     <div class="file-list" id="@($"fileList_{State.GetHashCode()}")">
         <table class="table table-sm table-hover file-table">
@@ -71,6 +99,7 @@
 
     private bool isDragOver = false;
     private int dragCounter = 0;
+    private bool showFavorites = false;
     private ElementReference panelContainer;
     private DotNetObjectReference<FilePanel>? dotNetRef;
     private string panelId => $"panel_{State.GetHashCode()}";
@@ -177,6 +206,25 @@
         {
             OnActivate.InvokeAsync();
         }
+    }
+
+    private void AddFavorite()
+    {
+        ActivatePanel();
+        JSRuntime.InvokeVoidAsync("openAddFavoriteModal");
+    }
+
+    private void ToggleFavorites()
+    {
+        showFavorites = !showFavorites;
+    }
+
+    private async Task LoadFavorite(string path)
+    {
+        showFavorites = false;
+        State.CurrentPath = path;
+        await LoadData();
+        ActivatePanel();
     }
 
     private string FormatSize(long bytes)

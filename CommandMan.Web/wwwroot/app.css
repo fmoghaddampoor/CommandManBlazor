@@ -382,3 +382,81 @@ body {
     font-size: 0.9rem;
     color: var(--text-muted);
 }
+
+/* Header Buttons & Favorites */
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    position: relative;
+}
+
+.header-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-main);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+}
+
+.header-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.heart-btn:hover i {
+    color: #ff4d4d;
+}
+
+.favorites-menu {
+    position: absolute;
+    top: 35px;
+    right: 0;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-item {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.menu-item.disabled {
+    cursor: default;
+    color: var(--text-muted);
+}
+
+.menu-item.disabled:hover {
+    background-color: transparent;
+}

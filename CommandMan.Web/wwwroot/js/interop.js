@@ -46,3 +46,21 @@ window.loadPanelPath = (panelKey) => {
         return null;
     }
 };
+
+window.saveFavorites = (json) => {
+    localStorage.setItem('favorites', json);
+};
+
+window.loadFavorites = () => {
+    return localStorage.getItem('favorites') || "[]";
+};
+
+window.setHomeHelper = (helper) => {
+    window.homeHelper = helper;
+};
+
+window.openAddFavoriteModal = () => {
+    if (window.homeHelper) {
+        window.homeHelper.invokeMethodAsync('OpenAddFavoriteModal');
+    }
+};
