@@ -48,6 +48,7 @@
     </div>
     
     <div class="app-footer" style="z-index: 1000;">
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Rename)">F2 Rename</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.View)">F3 View</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Edit)">F4 Edit</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Copy)">F5 Copy</div>
@@ -251,7 +252,7 @@
     
     private string ZipCompressionLevel = "Optimal";
 
-    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite, Zip, Unzip }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile, AddFavorite, Zip, Unzip, Diff, Rename }
 
     protected override void OnInitialized()
     {
@@ -415,6 +416,9 @@
             case "Enter":
                 await HandleEnter();
                 break;
+            case "F2":
+                await TriggerAction(ActionType.Rename);
+                break;
             case "F3":
                 await TriggerAction(ActionType.View);
                 break;
@@ -473,6 +477,9 @@
             case ActionType.Edit:
                 await HandleEdit();
                 break;
+            case ActionType.Rename:
+                OpenModal(action);
+                break;
             case ActionType.Copy:
             case ActionType.Move:
                 // Automate: Destination is always the other panel
@@ -516,6 +523,10 @@
                 ModalTitle = "Add Favorite Path";
                 ModalInputValue = System.IO.Path.GetFileName(activePath.TrimEnd('\\'));
                 if (string.IsNullOrEmpty(ModalInputValue)) ModalInputValue = activePath;
+                break;
+            case ActionType.Rename:
+                ModalTitle = "Rename " + selectedName;
+                ModalInputValue = AppState.ActivePanel.SelectedItem?.Name ?? "";
                 break;
             case ActionType.MkDir:
                 ModalTitle = "Create Directory";
@@ -751,6 +762,21 @@
                     if (!string.IsNullOrWhiteSpace(ModalInputValue))
                     {
                         await FavoritesService.AddFavorite(ModalInputValue, active.CurrentPath);
+                    }
+                    break;
+                case ActionType.Rename:
+                    if (!string.IsNullOrWhiteSpace(ModalInputValue) && active.SelectedItem != null)
+                    {
+                        var oldPath = active.SelectedItem.FullPath;
+                        var newName = ModalInputValue;
+                        var newPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(oldPath) ?? "", newName);
+                        
+                        await FileService.RenameItemAsync(oldPath, newPath);
+                        await ReloadPanel(active);
+                        
+                        // Select the renamed item
+                        var renamedItem = active.Items.FirstOrDefault(i => i.Name.Equals(newName, StringComparison.OrdinalIgnoreCase));
+                        if (renamedItem != null) active.SelectItem(renamedItem);
                     }
                     break;
                 case ActionType.MkDir:

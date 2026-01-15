@@ -130,6 +130,21 @@ namespace CommandMan.Infrastructure.Services
             });
         }
 
+        public Task RenameItemAsync(string sourcePath, string newPath)
+        {
+            return Task.Run(() =>
+            {
+                if (Directory.Exists(sourcePath))
+                {
+                    Directory.Move(sourcePath, newPath);
+                }
+                else if (File.Exists(sourcePath))
+                {
+                    File.Move(sourcePath, newPath, true);
+                }
+            });
+        }
+
         public async Task CopyItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null)
         {
             await Task.Run(() =>

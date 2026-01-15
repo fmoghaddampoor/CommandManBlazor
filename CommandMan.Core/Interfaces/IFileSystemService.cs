@@ -12,6 +12,7 @@ namespace CommandMan.Core.Interfaces
         Task CreateDirectoryAsync(string path);
         Task CreateFileAsync(string path);
         Task DeleteItemAsync(string path);
+        Task RenameItemAsync(string sourcePath, string newPath);
         Task CopyItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
         Task MoveItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
         Task ZipItemsAsync(List<string> sourcePaths, string destinationZipPath, System.IO.Compression.CompressionLevel compressionLevel);
