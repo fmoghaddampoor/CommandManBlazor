@@ -109,6 +109,11 @@ namespace CommandMan.Infrastructure.Services
             return Task.Run(() => Directory.CreateDirectory(path));
         }
 
+        public Task CreateFileAsync(string path)
+        {
+            return Task.Run(() => File.WriteAllText(path, string.Empty));
+        }
+
         public Task DeleteItemAsync(string path)
         {
             return Task.Run(() =>

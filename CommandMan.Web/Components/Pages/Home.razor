@@ -49,6 +49,7 @@
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Move)">F6 Move</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.MkDir)">F7 MkDir</div>
         <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.Delete)">F8 Delete</div>
+        <div class="f-key-btn" @onclick="() => TriggerAction(ActionType.NewFile)">F9 NewFile</div>
     </div>
 </div>
 
@@ -87,7 +88,7 @@
     private int leftDragCounter = 0;
     private int rightDragCounter = 0;
 
-    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete }
+    private enum ActionType { None, View, Edit, MkDir, Copy, Move, Delete, NewFile }
 
     protected override void OnInitialized()
     {
@@ -263,6 +264,9 @@
             case "F8":
                 await TriggerAction(ActionType.Delete);
                 break;
+            case "F9":
+                await TriggerAction(ActionType.NewFile);
+                break;
         }
     }
 
@@ -287,6 +291,7 @@
                 break;
             case ActionType.MkDir:
             case ActionType.Delete:
+            case ActionType.NewFile:
                 OpenModal(action);
                 break;
         }
@@ -315,6 +320,10 @@
         {
             case ActionType.MkDir:
                 ModalTitle = "Create Directory";
+                ModalInputValue = "";
+                break;
+            case ActionType.NewFile:
+                ModalTitle = "Create New File";
                 ModalInputValue = "";
                 break;
             case ActionType.Copy:
@@ -371,6 +380,18 @@
                         await ReloadPanel(active);
                         
                         // Select the new folder
+                        var newItem = active.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
+                        if (newItem != null) active.SelectItem(newItem);
+                    }
+                    break;
+                case ActionType.NewFile:
+                    if (!string.IsNullOrWhiteSpace(ModalInputValue))
+                    {
+                        var newPath = System.IO.Path.Combine(active.CurrentPath, ModalInputValue);
+                        await FileService.CreateFileAsync(newPath);
+                        await ReloadPanel(active);
+                        
+                        // Select the new file
                         var newItem = active.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
                         if (newItem != null) active.SelectItem(newItem);
                     }

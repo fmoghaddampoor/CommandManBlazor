@@ -10,6 +10,7 @@ namespace CommandMan.Core.Interfaces
         Task<List<FileSystemItem>> GetDrivesAsync();
         Task<bool> ExistsAsync(string path);
         Task CreateDirectoryAsync(string path);
+        Task CreateFileAsync(string path);
         Task DeleteItemAsync(string path);
         Task CopyItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
         Task MoveItemAsync(string sourcePath, string destPath, Action<double>? onProgress = null);
