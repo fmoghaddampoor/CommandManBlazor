@@ -78,43 +78,65 @@
 @if (IsManageFavoritesVisible)
 {
     <div class="modal-overlay">
-        <div class="modal-box" style="width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="modal-box" style="width: 650px; max-height: 85vh; display: flex; flex-direction: column;">
             <div class="modal-title">Manage Favorites</div>
-            <div style="flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-                @if (FavoritesService.GetFavorites().Any())
-                {
-                    var favs = FavoritesService.GetFavorites();
-                    @for (int i = 0; i < favs.Count; i++)
-                    {
-                        var index = i;
-                        var fav = favs[i];
-                        <div class="manage-fav-item" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 4px;">
-                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                                <input type="text" @bind="fav.Name" style="flex: 1; margin-bottom: 0;" placeholder="Name" />
-                                <div class="fav-actions" style="display: flex; gap: 4px;">
-                                    <button class="action-btn" @onclick="() => FavoritesService.MoveUp(index)" disabled="@(index == 0)" title="Move Up">
-                                        <i class="fas fa-arrow-up"></i>
-                                    </button>
-                                    <button class="action-btn" @onclick="() => FavoritesService.MoveDown(index)" disabled="@(index == favs.Count - 1)" title="Move Down">
-                                        <i class="fas fa-arrow-down"></i>
-                                    </button>
-                                    <button class="action-btn delete" @onclick="() => FavoritesService.RemoveFavorite(index)" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'Consolas', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@fav.Path">
-                                @fav.Path
-                            </span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <p style="color: var(--text-muted); text-align: center;">No favorites to manage.</p>
-                }
+            
+            <div class="fav-toolbar" style="display: flex; gap: 8px; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+                <button class="action-btn" @onclick="MoveFavUp" disabled="@(selectedFavoriteIndex <= 0 || !FavoritesService.GetFavorites().Any())" title="Move Up">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button class="action-btn" @onclick="MoveFavDown" disabled="@(selectedFavoriteIndex == -1 || selectedFavoriteIndex >= FavoritesService.GetFavorites().Count - 1)" title="Move Down">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+                <button class="action-btn delete" @onclick="DeleteSelectedFav" disabled="@(selectedFavoriteIndex == -1)" title="Delete Selected">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <div style="flex: 1"></div>
             </div>
-            <div class="modal-buttons">
+
+            <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px;">
+                <table class="file-table" style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                    <thead style="position: sticky; top: 0; background: var(--header-bg); z-index: 10;">
+                        <tr>
+                            <th style="width: 40%; border-bottom: 1px solid var(--border-color);">Name</th>
+                            <th style="border-bottom: 1px solid var(--border-color);">Path</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (FavoritesService.GetFavorites().Any())
+                        {
+                            var favs = FavoritesService.GetFavorites();
+                            @for (int i = 0; i < favs.Count; i++)
+                            {
+                                var index = i;
+                                var fav = favs[index];
+                                <tr class="@(selectedFavoriteIndex == index ? "selected" : "")" 
+                                    @onclick="() => selectedFavoriteIndex = index"
+                                    style="cursor: pointer;">
+                                    <td style="padding: 4px 8px;">
+                                        <input type="text" @bind="fav.Name" 
+                                               @onclick:stopPropagation
+                                               class="grid-input"
+                                               style="width: 100%; padding: 4px 6px; background: transparent; border: 1px solid transparent; color: inherit; outline: none;" />
+                                    </td>
+                                    <td style="padding: 4px 8px; font-family: 'Consolas', monospace; font-size: 0.8rem; color: var(--text-muted);">
+                                        <div style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@fav.Path">
+                                            @fav.Path
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="2" style="text-align: center; padding: 20px; color: var(--text-muted);">No favorites yet.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
                 <button @onclick="CloseManageFavorites">Close</button>
             </div>
         </div>
@@ -127,6 +149,7 @@
     // Modal State
     private bool IsModalVisible = false;
     private bool IsManageFavoritesVisible = false;
+    private int selectedFavoriteIndex = -1;
     private string ModalTitle = "";
     private string ModalInputValue = "";
     private ActionType ModalAction;
@@ -410,7 +433,40 @@
     private void CloseManageFavorites()
     {
         IsManageFavoritesVisible = false;
+        selectedFavoriteIndex = -1;
         StateHasChanged();
+    }
+
+    private async Task MoveFavUp()
+    {
+        if (selectedFavoriteIndex > 0)
+        {
+            await FavoritesService.MoveUp(selectedFavoriteIndex);
+            selectedFavoriteIndex--;
+        }
+    }
+
+    private async Task MoveFavDown()
+    {
+        var favs = FavoritesService.GetFavorites();
+        if (selectedFavoriteIndex >= 0 && selectedFavoriteIndex < favs.Count - 1)
+        {
+            await FavoritesService.MoveDown(selectedFavoriteIndex);
+            selectedFavoriteIndex++;
+        }
+    }
+
+    private async Task DeleteSelectedFav()
+    {
+        if (selectedFavoriteIndex >= 0)
+        {
+            await FavoritesService.RemoveFavorite(selectedFavoriteIndex);
+            var favs = FavoritesService.GetFavorites();
+            if (selectedFavoriteIndex >= favs.Count)
+            {
+                selectedFavoriteIndex = favs.Count - 1;
+            }
+        }
     }
 
     private async Task SubmitModal()
