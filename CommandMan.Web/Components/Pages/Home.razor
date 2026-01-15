@@ -89,6 +89,9 @@
                 <button class="action-btn" @onclick="MoveFavDown" disabled="@(selectedFavoriteIndex == -1 || selectedFavoriteIndex >= flatItems.Count - 1)" title="Move Down">
                     <i class="fas fa-arrow-down"></i>
                 </button>
+                <button class="action-btn" @onclick="OpenRenameFavModal" disabled="@(selectedFavoriteIndex == -1)" title="Rename Favorite">
+                    <i class="fas fa-edit"></i>
+                </button>
                 <button class="action-btn" @onclick="AddNewFolder" title="Add Folder">
                     <i class="fas fa-folder-plus"></i>
                 </button>
@@ -124,8 +127,8 @@
                                     @ondrop="() => HandleDrop(index)"
                                     @ondragover:preventDefault
                                     style="cursor: grab;">
-                                    <td style="padding: 4px 8px; padding-left: @(flat.Level * 24 + 12)px;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                    <td style="padding: 4px 12px; padding-left: @(flat.Level * 24 + 12)px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; height: 32px;">
                                             @if (flat.Item.IsFolder)
                                             {
                                                 <i class="fas fa-folder text-warning"></i>
@@ -134,10 +137,7 @@
                                             {
                                                 <i class="fas fa-star text-accent" style="color: var(--accent-color)"></i>
                                             }
-                                            <input type="text" @bind="flat.Item.Name" 
-                                                   @onclick:stopPropagation
-                                                   class="grid-input"
-                                                   style="flex: 1; padding: 4px 6px; background: transparent; border: 1px solid transparent; color: inherit; outline: none;" />
+                                            <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@flat.Item.Name</span>
                                         </div>
                                     </td>
                                     <td style="padding: 4px 8px; font-family: 'Consolas', monospace; font-size: 0.8rem; color: var(--text-muted);">
@@ -171,17 +171,46 @@
     </div>
 }
 
+@if (IsRenameModalVisible)
+{
+    <div class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-box" style="width: 450px;">
+            <div class="modal-title">Rename Favorite</div>
+            <div class="modal-form">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">Name</label>
+                    <input type="text" @bind="RenameModalName" @bind:event="oninput" style="width: 100%;" autofocus />
+                </div>
+                @if (!RenameModalIsFolder)
+                {
+                    <div class="input-group">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">Path</label>
+                        <input type="text" @bind="RenameModalPath" @bind:event="oninput" style="width: 100%;" />
+                    </div>
+                }
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button @onclick="CloseRenameModal">Cancel</button>
+                <button class="primary" @onclick="SubmitRenameModal">OK</button>
+            </div>
+        </div>
+    </div>
+}
 @code {
     private DotNetObjectReference<Home>? dotNetHelper;
     
     // Modal State
     private bool IsModalVisible = false;
     private bool IsManageFavoritesVisible = false;
+    private bool IsRenameModalVisible = false;
     private int selectedFavoriteIndex = -1;
     private int draggedIndex = -1;
     private int dragOverIndex = -1;
     private string ModalTitle = "";
     private string ModalInputValue = "";
+    private string RenameModalName = "";
+    private string RenameModalPath = "";
+    private bool RenameModalIsFolder = false;
     private ActionType ModalAction;
     
     private bool isLeftDragOver = false;
@@ -542,6 +571,38 @@
     private async Task AddNewFolder()
     {
         await FavoritesService.AddFolder("New Folder");
+    }
+
+    private void OpenRenameFavModal()
+    {
+        var flatItems = GetFlatFavorites();
+        if (selectedFavoriteIndex >= 0 && selectedFavoriteIndex < flatItems.Count)
+        {
+            var item = flatItems[selectedFavoriteIndex].Item;
+            RenameModalName = item.Name;
+            RenameModalPath = item.Path;
+            RenameModalIsFolder = item.IsFolder;
+            IsRenameModalVisible = true;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseRenameModal()
+    {
+        IsRenameModalVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task SubmitRenameModal()
+    {
+        var flatItems = GetFlatFavorites();
+        if (selectedFavoriteIndex >= 0 && selectedFavoriteIndex < flatItems.Count)
+        {
+            var item = flatItems[selectedFavoriteIndex].Item;
+            await FavoritesService.UpdateFavorite(item, RenameModalName, RenameModalPath);
+            IsRenameModalVisible = false;
+            StateHasChanged();
+        }
     }
 
     private async Task DeleteSelectedFav()

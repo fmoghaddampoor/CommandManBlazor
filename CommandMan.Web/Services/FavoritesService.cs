@@ -57,13 +57,11 @@ namespace CommandMan.Web.Services
             await SaveAsync();
         }
 
-        public async Task UpdateFavorite(int index, string name)
+        public async Task UpdateFavorite(FavoriteItem item, string newName, string newPath)
         {
-            if (index >= 0 && index < _favorites.Count)
-            {
-                _favorites[index].Name = name;
-                await SaveAsync();
-            }
+            item.Name = newName;
+            item.Path = newPath;
+            await SaveAsync();
         }
 
         public async Task RemoveFavorite(int index)

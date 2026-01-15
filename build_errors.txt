@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CommandMan.Core -> C:\CommandManBlazor\CommandManBlazor\CommandMan.Core\bin\Release\net10.0\CommandMan.Core.dll
+  CommandMan.Infrastructure -> C:\CommandManBlazor\CommandManBlazor\CommandMan.Infrastructure\bin\Release\net10.0\CommandMan.Infrastructure.dll
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(174,2): error RZ1006: The if block is missing a closing "}" character.  Make sure you have a matching "}" character for all the "{" characters within this block, and that none of the "}" characters are being interpreted as markup. [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\obj\Release\net10.0\Microsoft.CodeAnalysis.Razor.Compiler\Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator\Components_Pages_Home_razor.g.cs(1156,10): error CS1513: } expected [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(340,26): warning CS0168: The variable 'ex' is declared but never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(216,18): warning CS0414: The field 'Home.isRightDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\FilePanel.razor(98,17): warning CS0414: The field 'FilePanel.dragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(215,18): warning CS0414: The field 'Home.isLeftDragOver' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(218,17): warning CS0414: The field 'Home.rightDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
+C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\Components\Pages\Home.razor(217,17): warning CS0414: The field 'Home.leftDragCounter' is assigned but its value is never used [C:\CommandManBlazor\CommandManBlazor\CommandMan.Web\CommandMan.Web.csproj]
