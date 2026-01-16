@@ -17,6 +17,12 @@
     --btn-hover-bg: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
     --selection-bg: rgba(233, 69, 96, 0.3);
     --modal-overlay: rgba(0, 0, 0, 0.7);
+
+    /* Log Colors */
+    --log-err: #f48771;
+    --log-wrn: #ffca28;
+    --log-inf: #f1f1f1;
+    --log-dbg: #b5cea8;
 }
 
 .theme-midnight {
@@ -37,6 +43,12 @@
     --btn-primary-bg: #2f3136;
     --btn-hover-bg: #393c43;
     --selection-bg: rgba(114, 137, 218, 0.3);
+
+    /* Log Colors */
+    --log-err: #ff6b6b;
+    --log-wrn: #ffd93d;
+    --log-inf: #dcddde;
+    --log-dbg: #6bcb77;
 }
 
 .theme-solarized {
@@ -57,6 +69,12 @@
     --btn-primary-bg: #073642;
     --btn-hover-bg: #586e75;
     --selection-bg: rgba(38, 139, 210, 0.3);
+
+    /* Log Colors */
+    --log-err: #dc322f;
+    --log-wrn: #b58900;
+    --log-inf: #839496;
+    --log-dbg: #859900;
 }
 
 .theme-light {
@@ -79,6 +97,12 @@
     --selection-bg: rgba(0, 120, 212, 0.2);
     --modal-overlay: rgba(255, 255, 255, 0.7);
     --text-muted: #555555;
+
+    /* Log Colors */
+    --log-err: #a4262c;
+    --log-wrn: #845007;
+    --log-inf: #333333;
+    --log-dbg: #107c10;
 }
 
 .theme-emerald {
@@ -99,6 +123,12 @@
     --btn-primary-bg: #121a16;
     --btn-hover-bg: #1a2620;
     --selection-bg: rgba(46, 204, 113, 0.3);
+
+    /* Log Colors */
+    --log-err: #e74c3c;
+    --log-wrn: #f1c40f;
+    --log-inf: #e8f8f5;
+    --log-dbg: #2ecc71;
 }
 
 html,

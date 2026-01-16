@@ -1,6 +1,9 @@
 @page "/logs"
 @using System.IO
 @inject IWebHostEnvironment Env
+@using CommandMan.Web.Services
+@inject ThemeService ThemeService
+@implements IDisposable
 
 <h3>Log Viewer</h3>
 
@@ -78,74 +81,83 @@
         gap: 15px;
         margin-bottom: 15px; 
         padding: 12px; 
-        background: #252526; 
+        background: var(--panel-bg); 
+        border: 1px solid var(--border-color);
         border-radius: 6px; 
-        color: #e1e1e1;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        color: var(--text-main);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     .log-select {
-        background: #3c3c3c;
-        color: white;
-        border: 1px solid #555;
-        padding: 4px 8px;
+        background: var(--bg-color);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 6px 12px;
         border-radius: 4px;
+        outline: none;
     }
     .log-btn {
-        background: var(--accent-color, #0078d4);
+        background: var(--accent-color);
         color: white;
         border: none;
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 4px;
         cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
     }
     .log-btn.clear-btn { background: #d83b01; }
-    .log-btn.clear-btn:hover { background: #a82a00; }
-    .log-btn:hover { background: #005a9e; }
-    .auto-refresh-label { font-size: 0.9rem; cursor: pointer; }
+    .log-btn.clear-btn:hover { background: #a82a00; transform: translateY(-1px); }
+    .log-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .auto-refresh-label { font-size: 0.9rem; cursor: pointer; color: var(--text-muted); }
     .log-filters { display: flex; gap: 10px; margin-left: auto; font-size: 0.9rem; }
-    .log-filters label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .log-filters label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-muted); }
+    .log-filters label:hover { color: var(--text-main); }
 
     .log-container { 
-        background: #1e1e1e; 
-        color: #d4d4d4; 
+        background: var(--bg-color); 
+        color: var(--text-main); 
         padding: 0; 
         font-family: 'Cascadia Code', 'Consolas', monospace; 
         height: calc(100vh - 180px); 
         overflow: auto; 
-        border-radius: 6px;
-        border: 1px solid #333;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
     }
     
     .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .log-table th { 
         position: sticky; 
         top: 0; 
-        background: #2d2d2d; 
-        padding: 8px; 
+        background: var(--header-bg); 
+        padding: 10px 8px; 
         text-align: left; 
-        border-bottom: 2px solid #444; 
-        color: #aaa;
+        border-bottom: 2px solid var(--border-color); 
+        color: var(--text-muted);
         z-index: 10;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 11px;
     }
-    .log-table td { padding: 4px 8px; border-bottom: 1px solid #222; vertical-align: top; }
+    .log-table td { padding: 8px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
     
     .log-row:hover { background: rgba(255, 255, 255, 0.03); }
     
     /* Level Colors */
-    .level-err { color: #f48771; } /* Error - Reddish */
+    .level-err { color: var(--log-err); } 
     .level-err .col-level { font-weight: bold; }
     
-    .level-wrn { color: #cca700; } /* Warning - Yellowish */
-    .level-inf { color: #d4d4d4; } /* Info - Whiteish */
-    .level-dbg { color: #b5cea8; } /* Debug - Greenish */
+    .level-wrn { color: var(--log-wrn); } 
+    .level-inf { color: var(--log-inf); } 
+    .level-dbg { color: var(--log-dbg); } 
     
-    .exception-row td { padding-top: 0; padding-bottom: 8px; font-size: 12px; opacity: 0.8; }
-    .col-exception { white-space: pre-wrap; color: #f48771; background: rgba(244, 135, 113, 0.05); }
+    .exception-row td { padding-top: 0; padding-bottom: 12px; font-size: 12px; opacity: 0.9; }
+    .col-exception { white-space: pre-wrap; color: var(--log-err); background: rgba(244, 135, 113, 0.03); border-radius: 4px; margin: 4px; }
 
-    .col-time { white-space: nowrap; color: #888; width: 180px; }
+    .col-time { white-space: nowrap; color: var(--text-muted); width: 180px; }
     .col-level { width: 60px; text-transform: uppercase; }
-    .col-source { width: 80px; color: #569cd6; }
-    .col-context { width: 200px; color: #4ec9b0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .col-source { width: 80px; color: var(--accent-color); opacity: 0.8; }
+    .col-context { width: 200px; color: var(--path-color); opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .col-message { 
         word-break: break-all; 
         position: relative;
@@ -165,10 +177,10 @@
         max-height: none;
     }
     .expand-btn {
-        background: #444;
-        color: #fff;
-        border: none;
-        border-radius: 3px;
+        background: var(--panel-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
         width: 20px;
         height: 20px;
         line-height: 18px;
@@ -183,12 +195,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: all 0.2s;
     }
     .expand-btn:hover {
-        background: #666;
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
     }
 
-    .no-logs { padding: 20px; color: #888; text-align: center; }
+    .no-logs { padding: 30px; color: var(--text-muted); text-align: center; font-style: italic; }
 </style>
 
 @code {
@@ -231,6 +246,16 @@
                 });
             }
         }, null, 5000, 5000);
+
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.LoadThemeAsync();
+        }
     }
 
     private void LoadLogs()
@@ -344,5 +369,6 @@
     public void Dispose()
     {
         _timer?.Dispose();
+        ThemeService.OnThemeChanged -= StateHasChanged;
     }
 }
