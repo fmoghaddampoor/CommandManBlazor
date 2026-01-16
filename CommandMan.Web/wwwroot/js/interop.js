@@ -84,3 +84,16 @@ window.selectInputText = (element) => {
         element.select();
     }
 };
+
+window.applyTheme = (themeClass) => {
+    // Remove all previous theme classes
+    const classes = document.documentElement.classList;
+    for (let c of classes) {
+        if (c.startsWith('theme-')) {
+            document.documentElement.classList.remove(c);
+        }
+    }
+    if (themeClass && themeClass !== 'theme-standard') {
+        document.documentElement.classList.add(themeClass);
+    }
+};

@@ -9,6 +9,16 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["CommandMan.Web.styles.css"]" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script>
+        (function() {
+            try {
+                const theme = localStorage.getItem('app_theme');
+                if (theme && theme !== 'standard') {
+                    document.documentElement.classList.add('theme-' + theme);
+                }
+            } catch (e) {}
+        })();
+    </script>
     <ImportMap />
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>

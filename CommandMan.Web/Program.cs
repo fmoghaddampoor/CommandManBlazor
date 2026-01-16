@@ -44,6 +44,7 @@ builder.Services.AddScoped<IProgressService>(p =>
 builder.Services.AddScoped<IFavoritesService>(p => 
     Decorate<IFavoritesService>(p, ActivatorUtilities.CreateInstance<FavoritesService>(p)));
 
+builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<IClipboardService>(p => 
     Decorate<IClipboardService>(p, ActivatorUtilities.CreateInstance<ClipboardService>(p)));
 

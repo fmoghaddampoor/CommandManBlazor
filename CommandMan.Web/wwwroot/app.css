@@ -8,11 +8,97 @@
     --accent-color: #e94560;
     --accent-hover: #ff2e63;
     --border-color: #2a2a40;
-
+    --path-color: #ffd700;
+    --footer-bg: #0b1e36;
+    --drive-btn-bg: linear-gradient(to bottom, #2a2a40, #161625);
+    --drive-btn-text: #f1f1f1;
+    --drive-btn-border: #3e3e5e;
     --btn-primary-bg: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
     --btn-hover-bg: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
     --selection-bg: rgba(233, 69, 96, 0.3);
     --modal-overlay: rgba(0, 0, 0, 0.7);
+}
+
+.theme-midnight {
+    --bg-color: #0b0e14;
+    --panel-bg: #151921;
+    --header-bg: #1c222d;
+    --text-color: #7289da;
+    --text-main: #dcddde;
+    --text-muted: #72767d;
+    --accent-color: #7289da;
+    --accent-hover: #5b6eae;
+    --border-color: #202225;
+    --path-color: #7289da;
+    --footer-bg: #1c222d;
+    --drive-btn-bg: #2f3136;
+    --drive-btn-text: #dcddde;
+    --drive-btn-border: #202225;
+    --btn-primary-bg: #2f3136;
+    --btn-hover-bg: #393c43;
+    --selection-bg: rgba(114, 137, 218, 0.3);
+}
+
+.theme-solarized {
+    --bg-color: #002b36;
+    --panel-bg: #073642;
+    --header-bg: #00212b;
+    --text-color: #b58900;
+    --text-main: #839496;
+    --text-muted: #586e75;
+    --accent-color: #268bd2;
+    --accent-hover: #2aa198;
+    --border-color: #00212b;
+    --path-color: #b58900;
+    --footer-bg: #00212b;
+    --drive-btn-bg: #073642;
+    --drive-btn-text: #839496;
+    --drive-btn-border: #00212b;
+    --btn-primary-bg: #073642;
+    --btn-hover-bg: #586e75;
+    --selection-bg: rgba(38, 139, 210, 0.3);
+}
+
+.theme-light {
+    --bg-color: #f3f3f3;
+    --panel-bg: #ffffff;
+    --header-bg: #e1e1e1;
+    --text-color: #005a9e;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --accent-color: #0078d4;
+    --accent-hover: #005a9e;
+    --border-color: #cccccc;
+    --path-color: #005a9e;
+    --footer-bg: #e1e1e1;
+    --drive-btn-bg: #ffffff;
+    --drive-btn-text: #333333;
+    --drive-btn-border: #cccccc;
+    --btn-primary-bg: #e1e1e1;
+    --btn-hover-bg: #d1d1d1;
+    --selection-bg: rgba(0, 120, 212, 0.2);
+    --modal-overlay: rgba(255, 255, 255, 0.7);
+    --text-muted: #555555;
+}
+
+.theme-emerald {
+    --bg-color: #0a0f0d;
+    --panel-bg: #121a16;
+    --header-bg: #1a2620;
+    --text-color: #2ecc71;
+    --text-main: #e8f8f5;
+    --text-muted: #566573;
+    --accent-color: #2ecc71;
+    --accent-hover: #27ae60;
+    --border-color: #1a2620;
+    --path-color: #2ecc71;
+    --footer-bg: #0a0f0d;
+    --drive-btn-bg: #121a16;
+    --drive-btn-text: #e8f8f5;
+    --drive-btn-border: #1a2620;
+    --btn-primary-bg: #121a16;
+    --btn-hover-bg: #1a2620;
+    --selection-bg: rgba(46, 204, 113, 0.3);
 }
 
 html,
@@ -115,7 +201,7 @@ body {
 
 .current-path {
     font-family: 'Consolas', monospace;
-    color: #ffd700;
+    color: var(--path-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -196,7 +282,7 @@ body {
 /* Footer Function Keys */
 .app-footer {
     display: flex;
-    background-color: #0b1e36;
+    background-color: var(--footer-bg);
     padding: 5px;
     gap: 4px;
 }
@@ -315,9 +401,9 @@ body {
 }
 
 .drive-btn {
-    background: linear-gradient(to bottom, #2a2a40, #161625);
-    color: var(--text-main);
-    border: 1px solid #3e3e5e;
+    background: var(--drive-btn-bg);
+    color: var(--drive-btn-text);
+    border: 1px solid var(--drive-btn-border);
     padding: 6px 14px;
     border-radius: 6px;
     cursor: pointer;

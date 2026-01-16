@@ -10,6 +10,7 @@
 @inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
 @inject NavigationManager Navigation
 @inject IFavoritesService FavoritesService
+@inject ThemeService ThemeService
 @implements IAsyncDisposable
 
 <PageTitle>CommandMan</PageTitle>
@@ -45,7 +46,8 @@
     <div class="command-bar">
         <span class="cmd-prefix">@AppState.ActivePanel.CurrentPath&gt;</span>
         <input type="text" class="cmd-input" />
-        <a href="logs" target="_blank" style="margin-left: 10px; color: #aaa; text-decoration: none; padding: 5px; border: 1px solid #444;">Logs</a>
+        <a href="logs" target="_blank" style="margin-left: 10px; color: #aaa; text-decoration: none; padding: 5px; border: 1px solid #444;" title="View Logs"><i class="fas fa-terminal"></i></a>
+        <button @onclick="OpenSettings" style="margin-left: 8px; background: transparent; border: 1px solid #444; color: #aaa; cursor: pointer; padding: 5px 8px;" title="Settings"><i class="fas fa-cog"></i></button>
     </div>
     
     <div class="app-footer" style="z-index: 1000;">
@@ -229,6 +231,90 @@
         </div>
     </div>
 }
+
+@if (IsSettingsVisible)
+{
+    <div class="modal-overlay">
+        <div class="modal-box" style="width: 500px;">
+            <div class="modal-title">Application Settings</div>
+            
+            <div class="settings-section">
+                <label style="display: block; margin-bottom: 12px; font-weight: 600;">Choose Theme</label>
+                <div class="theme-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="theme-option @(ThemeService.CurrentTheme == "standard" ? "active" : "")" @onclick='() => ThemeService.SetThemeAsync("standard")'>
+                        <span class="theme-preview" style="background: #1a1a2e; border: 1px solid #e94560;">
+                            @if (ThemeService.CurrentTheme == "standard") { <i class="fas fa-check"></i> }
+                        </span>
+                        Standard
+                    </button>
+                    <button class="theme-option @(ThemeService.CurrentTheme == "midnight" ? "active" : "")" @onclick='() => ThemeService.SetThemeAsync("midnight")'>
+                        <span class="theme-preview" style="background: #0b0e14; border: 1px solid #7289da;">
+                            @if (ThemeService.CurrentTheme == "midnight") { <i class="fas fa-check"></i> }
+                        </span>
+                        Midnight
+                    </button>
+                    <button class="theme-option @(ThemeService.CurrentTheme == "solarized" ? "active" : "")" @onclick='() => ThemeService.SetThemeAsync("solarized")'>
+                        <span class="theme-preview" style="background: #002b36; border: 1px solid #268bd2;">
+                            @if (ThemeService.CurrentTheme == "solarized") { <i class="fas fa-check"></i> }
+                        </span>
+                        Solarized
+                    </button>
+                    <button class="theme-option @(ThemeService.CurrentTheme == "light" ? "active" : "")" @onclick='() => ThemeService.SetThemeAsync("light")'>
+                        <span class="theme-preview" style="background: #f3f3f3; border: 1px solid #0078d4;">
+                            @if (ThemeService.CurrentTheme == "light") { <i class="fas fa-check" style="color: #0078d4;"></i> }
+                        </span>
+                        Light
+                    </button>
+                    <button class="theme-option @(ThemeService.CurrentTheme == "emerald" ? "active" : "")" @onclick='() => ThemeService.SetThemeAsync("emerald")'>
+                        <span class="theme-preview" style="background: #0a0f0d; border: 1px solid #2ecc71;">
+                            @if (ThemeService.CurrentTheme == "emerald") { <i class="fas fa-check"></i> }
+                        </span>
+                        Emerald
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 30px;">
+                <button @onclick="CloseSettings">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .theme-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+    }
+    .theme-option:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: var(--accent-color);
+    }
+    .theme-option.active {
+        border-color: var(--accent-color);
+        background: rgba(233, 69, 96, 0.1);
+        font-weight: bold;
+    }
+    .theme-preview {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+    }
+</style>
 @code {
     private DotNetObjectReference<Home>? dotNetHelper;
     
@@ -236,6 +322,7 @@
     private bool IsModalVisible = false;
     private bool IsManageFavoritesVisible = false;
     private bool IsRenameModalVisible = false;
+    private bool IsSettingsVisible = false;
     private int selectedFavoriteIndex = -1;
     private int draggedIndex = -1;
     private int dragOverIndex = -1;
@@ -268,7 +355,12 @@
             StateHasChanged(); 
             await SavePanelPath(AppState.RightPanel, "RightPanelPath");
         };
+
+        ThemeService.OnThemeChanged += StateHasChanged;
     }
+
+    private void OpenSettings() => IsSettingsVisible = true;
+    private void CloseSettings() => IsSettingsVisible = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -285,6 +377,9 @@
                 // Load favorites
                 await FavoritesService.LoadAsync();
                 
+                // Load Theme
+                await ThemeService.LoadThemeAsync();
+
                 // Load state or Defaults
                 await LoadState();
             }
@@ -973,6 +1068,7 @@
         AppState.OnChange -= StateHasChanged;
         AppState.LeftPanel.OnChange -= StateHasChanged;
         AppState.RightPanel.OnChange -= StateHasChanged;
+        ThemeService.OnThemeChanged -= StateHasChanged;
         if (dotNetHelper != null)
         {
             try 
