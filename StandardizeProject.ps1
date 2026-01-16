@@ -69,15 +69,15 @@ if (-not $propGroup.GenerateDocumentationFile) {
 
 if (-not $propGroup.NoWarn -or $propGroup.NoWarn -notmatch "SA1636") {
     if ($propGroup.NoWarn) {
-        $propGroup.NoWarn = "$(NoWarn);SA1636"
+        $propGroup.NoWarn = '$(NoWarn);SA1636'
     }
     else {
         $node = $xml.CreateElement("NoWarn")
-        $node.InnerText = "$(NoWarn);SA1636"
+        $node.InnerText = '$(NoWarn);SA1636'
         $propGroup.AppendChild($node)
     }
     Write-Host "  Added SA1636 to NoWarn"
 }
 
-$xml.Save($csprojPath.FullName)
+$xml.Save($csprojPath.FullName) | Out-Null
 Write-Host "$projectName standardized successfully!" -ForegroundColor Green
