@@ -14,6 +14,11 @@
     <label class="auto-refresh-label">
         <input type="checkbox" @bind="AutoRefresh" /> Auto Refresh (5s)
     </label>
+    <div class="log-filters">
+        <label><input type="checkbox" @bind="ShowErrors" /> Errors</label>
+        <label><input type="checkbox" @bind="ShowWarnings" /> Warnings</label>
+        <label><input type="checkbox" @bind="ShowInfo" /> Info</label>
+    </div>
 </div>
 
 <div class="log-container">
@@ -30,14 +35,24 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var log in Logs)
+                @foreach (var log in FilteredLogs)
                 {
                     <tr class="log-row @GetLogLevelClass(log.Level)">
                         <td class="col-time">@log.Timestamp</td>
                         <td class="col-level">@log.Level</td>
                         <td class="col-source">@log.Source</td>
                         <td class="col-context">@log.Context</td>
-                        <td class="col-message">@log.Message</td>
+                        <td class="col-message">
+                            @if (log.Message.Length > 200)
+                            {
+                                <button @onclick="() => log.IsExpanded = !log.IsExpanded" class="expand-btn">
+                                    @(log.IsExpanded ? "-" : "+")
+                                </button>
+                            }
+                            <div class="message-text @(log.IsExpanded ? "message-expanded" : "message-collapsed")">
+                                @log.Message
+                            </div>
+                        </td>
                     </tr>
                     @if (!string.IsNullOrEmpty(log.Exception))
                     {
@@ -84,6 +99,8 @@
     }
     .log-btn:hover { background: #005a9e; }
     .auto-refresh-label { font-size: 0.9rem; cursor: pointer; }
+    .log-filters { display: flex; gap: 10px; margin-left: auto; font-size: 0.9rem; }
+    .log-filters label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
 
     .log-container { 
         background: #1e1e1e; 
@@ -126,7 +143,47 @@
     .col-level { width: 60px; text-transform: uppercase; }
     .col-source { width: 80px; color: #569cd6; }
     .col-context { width: 200px; color: #4ec9b0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .col-message { word-break: break-all; }
+    .col-message { 
+        word-break: break-all; 
+        position: relative;
+    }
+    .message-text {
+        transition: max-height 0.3s ease;
+    }
+    .message-collapsed {
+        max-height: 4.5em; /* Approximately 3 lines */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+    .message-expanded {
+        max-height: none;
+    }
+    .expand-btn {
+        background: #444;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        width: 20px;
+        height: 20px;
+        line-height: 18px;
+        text-align: center;
+        cursor: pointer;
+        font-family: monospace;
+        font-weight: bold;
+        float: left;
+        margin-right: 8px;
+        margin-top: 2px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .expand-btn:hover {
+        background: #666;
+    }
 
     .no-logs { padding: 20px; color: #888; text-align: center; }
 </style>
@@ -134,8 +191,17 @@
 @code {
     private string SelectedLogFile = "combined";
     private bool AutoRefresh = false;
+    private bool ShowErrors = true;
+    private bool ShowWarnings = true;
+    private bool ShowInfo = true;
     private List<LogEntry> Logs = new();
     private System.Threading.Timer? _timer;
+
+    private IEnumerable<LogEntry> FilteredLogs => Logs.Where(log => 
+        (ShowErrors && (log.Level == "ERR" || log.Level == "FAT")) ||
+        (ShowWarnings && log.Level == "WRN") ||
+        (ShowInfo && (log.Level == "INF" || log.Level == "DBG" || log.Level == "VRB"))
+    );
 
     public class LogEntry
     {
@@ -145,6 +211,7 @@
         public string Context { get; set; } = "";
         public string Message { get; set; } = "";
         public string Exception { get; set; } = "";
+        public bool IsExpanded { get; set; } = false;
     }
 
     protected override void OnInitialized()
