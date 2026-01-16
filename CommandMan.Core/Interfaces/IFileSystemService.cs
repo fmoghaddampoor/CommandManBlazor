@@ -18,6 +18,7 @@ namespace CommandMan.Core.Interfaces
         Task ZipItemsAsync(List<string> sourcePaths, string destinationZipPath, System.IO.Compression.CompressionLevel compressionLevel);
         Task UnzipItemAsync(string zipFilePath, string destinationPath);
         Task OpenFileAsync(string path);
+        Task ShowInExplorerAsync(string path);
         string GetParentPath(string path);
     }
 }

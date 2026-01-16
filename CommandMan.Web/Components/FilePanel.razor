@@ -34,6 +34,9 @@
             <button class="header-btn sync-btn" title="Load path from other panel" @onclick="LoadPathFromOtherPanel">
                 <i class="fas fa-exchange-alt"></i>
             </button>
+            <button class="header-btn explorer-btn" title="Open in Explorer" @onclick="OpenInExplorer">
+                <i class="fas fa-external-link-alt"></i>
+            </button>
             <button class="header-btn heart-btn" title="Add Favorite" @onclick="AddFavorite">
                 <i class="fas fa-heart"></i>
             </button>
@@ -321,6 +324,14 @@
         }
         
         await OnLoadPath.InvokeAsync(OtherPanelState.CurrentPath);
+    }
+
+    private async Task OpenInExplorer()
+    {
+        var target = State.SelectedItem?.FullPath ?? State.CurrentPath;
+        if (string.IsNullOrEmpty(target)) return;
+        
+        await FileService.ShowInExplorerAsync(target);
     }
 
     private void ToggleFavorites()

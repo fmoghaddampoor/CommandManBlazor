@@ -340,6 +340,33 @@ namespace CommandMan.Infrastructure.Services
             });
         }
 
+        public Task ShowInExplorerAsync(string path)
+        {
+            return Task.Run(() =>
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
+                if (string.IsNullOrEmpty(path)) return;
+
+                try
+                {
+                    if (File.Exists(path) || Directory.Exists(path))
+                    {
+                        Process.Start("explorer.exe", $"/select,\"{path}\"");
+                    }
+                    else
+                    {
+                        // If path doesn't exist, maybe it's a drive or parent path
+                        Process.Start("explorer.exe", $"\"{path}\"");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error showing in explorer: {ex.Message}");
+                }
+            });
+        }
+
         public string GetParentPath(string path)
         {
             if (string.IsNullOrEmpty(path)) return string.Empty;
