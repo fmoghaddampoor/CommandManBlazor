@@ -3,13 +3,13 @@
 @using CommandMan.Web.Components
 @using CommandMan.Core.Entities
 @using CommandMan.Core.Interfaces
-@inject AppState AppState
-@inject ProgressService ProgressState
+@inject IAppState AppState
+@inject IProgressService ProgressState
 @inject IJSRuntime JS
 @inject IFileSystemService FileService
 @inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage LocalStorage
 @inject NavigationManager Navigation
-@inject FavoritesService FavoritesService
+@inject IFavoritesService FavoritesService
 @implements IAsyncDisposable
 
 <PageTitle>CommandMan</PageTitle>
@@ -45,6 +45,7 @@
     <div class="command-bar">
         <span class="cmd-prefix">@AppState.ActivePanel.CurrentPath&gt;</span>
         <input type="text" class="cmd-input" />
+        <a href="logs" target="_blank" style="margin-left: 10px; color: #aaa; text-decoration: none; padding: 5px; border: 1px solid #444;">Logs</a>
     </div>
     
     <div class="app-footer" style="z-index: 1000;">
@@ -773,6 +774,7 @@
                         
                         await FileService.RenameItemAsync(oldPath, newPath);
                         await ReloadPanel(active);
+                        if (targetPanel.CurrentPath.Equals(active.CurrentPath, StringComparison.OrdinalIgnoreCase)) await ReloadPanel(targetPanel);
                         
                         // Select the renamed item
                         var renamedItem = active.Items.FirstOrDefault(i => i.Name.Equals(newName, StringComparison.OrdinalIgnoreCase));
@@ -785,6 +787,7 @@
                         var newPath = System.IO.Path.Combine(active.CurrentPath, ModalInputValue);
                         await FileService.CreateDirectoryAsync(newPath);
                         await ReloadPanel(active);
+                        if (targetPanel.CurrentPath.Equals(active.CurrentPath, StringComparison.OrdinalIgnoreCase)) await ReloadPanel(targetPanel);
                         
                         // Select the new folder
                         var newItem = active.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
@@ -797,10 +800,22 @@
                         var newPath = System.IO.Path.Combine(active.CurrentPath, ModalInputValue);
                         await FileService.CreateFileAsync(newPath);
                         await ReloadPanel(active);
+                        Console.WriteLine($"[Debug] Reloaded active panel. Item count: {active.Items.Count}");
+                        
+                        if (targetPanel.CurrentPath.Equals(active.CurrentPath, StringComparison.OrdinalIgnoreCase)) await ReloadPanel(targetPanel);
                         
                         // Select the new file
                         var newItem = active.Items.FirstOrDefault(i => i.Name.Equals(ModalInputValue, StringComparison.OrdinalIgnoreCase));
-                        if (newItem != null) active.SelectItem(newItem);
+                        if (newItem != null) 
+                        {
+                            active.SelectItem(newItem);
+                            Console.WriteLine($"[Debug] Selected new item: {newItem.Name}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[Debug] Could NOT find new item '{ModalInputValue}' in reloaded items.");
+                        }
+                        StateHasChanged();
                     }
                     break;
 
@@ -858,6 +873,7 @@
                     }
                     ProgressState.Stop();
                     await ReloadPanel(active);
+                    if (targetPanel.CurrentPath.Equals(active.CurrentPath, StringComparison.OrdinalIgnoreCase)) await ReloadPanel(targetPanel);
                     break;
                     
                 case ActionType.Zip:
@@ -927,6 +943,7 @@
     {
         panel.Items = await FileService.GetDirectoryContentAsync(panel.CurrentPath);
         panel.NotifyStateChanged();
+        StateHasChanged();
     }
 
     private async Task HandleEnter()

@@ -1,0 +1,246 @@
+@page "/logs"
+@using System.IO
+@inject IWebHostEnvironment Env
+
+<h3>Log Viewer</h3>
+
+<div class="log-controls">
+    <select @bind="SelectedLogFile" class="log-select">
+        <option value="combined">All Logs</option>
+        <option value="backend">Backend</option>
+        <option value="frontend">Frontend</option>
+    </select>
+    <button @onclick="LoadLogs" class="log-btn refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <label class="auto-refresh-label">
+        <input type="checkbox" @bind="AutoRefresh" /> Auto Refresh (5s)
+    </label>
+</div>
+
+<div class="log-container">
+    @if (Logs.Any())
+    {
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Level</th>
+                    <th>Source</th>
+                    <th>Context</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Logs)
+                {
+                    <tr class="log-row @GetLogLevelClass(log.Level)">
+                        <td class="col-time">@log.Timestamp</td>
+                        <td class="col-level">@log.Level</td>
+                        <td class="col-source">@log.Source</td>
+                        <td class="col-context">@log.Context</td>
+                        <td class="col-message">@log.Message</td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(log.Exception))
+                    {
+                        <tr class="log-row @GetLogLevelClass(log.Level) exception-row">
+                            <td colspan="5" class="col-exception">@log.Exception</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="no-logs">No logs found or file empty.</div>
+    }
+</div>
+
+<style>
+    .log-controls { 
+        display: flex; 
+        align-items: center; 
+        gap: 15px;
+        margin-bottom: 15px; 
+        padding: 12px; 
+        background: #252526; 
+        border-radius: 6px; 
+        color: #e1e1e1;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .log-select {
+        background: #3c3c3c;
+        color: white;
+        border: 1px solid #555;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .log-btn {
+        background: var(--accent-color, #0078d4);
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .log-btn:hover { background: #005a9e; }
+    .auto-refresh-label { font-size: 0.9rem; cursor: pointer; }
+
+    .log-container { 
+        background: #1e1e1e; 
+        color: #d4d4d4; 
+        padding: 0; 
+        font-family: 'Cascadia Code', 'Consolas', monospace; 
+        height: calc(100vh - 180px); 
+        overflow: auto; 
+        border-radius: 6px;
+        border: 1px solid #333;
+    }
+    
+    .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .log-table th { 
+        position: sticky; 
+        top: 0; 
+        background: #2d2d2d; 
+        padding: 8px; 
+        text-align: left; 
+        border-bottom: 2px solid #444; 
+        color: #aaa;
+        z-index: 10;
+    }
+    .log-table td { padding: 4px 8px; border-bottom: 1px solid #222; vertical-align: top; }
+    
+    .log-row:hover { background: rgba(255, 255, 255, 0.03); }
+    
+    /* Level Colors */
+    .level-err { color: #f48771; } /* Error - Reddish */
+    .level-err .col-level { font-weight: bold; }
+    
+    .level-wrn { color: #cca700; } /* Warning - Yellowish */
+    .level-inf { color: #d4d4d4; } /* Info - Whiteish */
+    .level-dbg { color: #b5cea8; } /* Debug - Greenish */
+    
+    .exception-row td { padding-top: 0; padding-bottom: 8px; font-size: 12px; opacity: 0.8; }
+    .col-exception { white-space: pre-wrap; color: #f48771; background: rgba(244, 135, 113, 0.05); }
+
+    .col-time { white-space: nowrap; color: #888; width: 180px; }
+    .col-level { width: 60px; text-transform: uppercase; }
+    .col-source { width: 80px; color: #569cd6; }
+    .col-context { width: 200px; color: #4ec9b0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .col-message { word-break: break-all; }
+
+    .no-logs { padding: 20px; color: #888; text-align: center; }
+</style>
+
+@code {
+    private string SelectedLogFile = "combined";
+    private bool AutoRefresh = false;
+    private List<LogEntry> Logs = new();
+    private System.Threading.Timer? _timer;
+
+    public class LogEntry
+    {
+        public string Timestamp { get; set; } = "";
+        public string Level { get; set; } = "";
+        public string Source { get; set; } = "";
+        public string Context { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Exception { get; set; } = "";
+    }
+
+    protected override void OnInitialized()
+    {
+        LoadLogs();
+        _timer = new System.Threading.Timer(async _ => 
+        {
+            if (AutoRefresh)
+            {
+                await InvokeAsync(() => 
+                {
+                    LoadLogs();
+                    StateHasChanged();
+                });
+            }
+        }, null, 5000, 5000);
+    }
+
+    private void LoadLogs()
+    {
+        try
+        {
+            var logDir = Path.Combine(Env.ContentRootPath, "logs");
+            if (!Directory.Exists(logDir))
+            {
+                Logs = new List<LogEntry>();
+                return;
+            }
+
+            var pattern = $"commandman-{SelectedLogFile}*.log";
+            var files = Directory.GetFiles(logDir, pattern).OrderByDescending(f => f).ToList();
+            
+            if (files.Any())
+            {
+                var file = files.First();
+                
+                using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(fs))
+                {
+                    var newLogs = new List<LogEntry>();
+                    string? line;
+                    LogEntry? currentEntry = null;
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains(" | "))
+                        {
+                            var parts = line.Split(" | ", 5);
+                            if (parts.Length >= 5)
+                            {
+                                currentEntry = new LogEntry
+                                {
+                                    Timestamp = parts[0],
+                                    Level = parts[1].Trim(),
+                                    Source = parts[2].Trim(),
+                                    Context = parts[3].Trim(),
+                                    Message = parts[4]
+                                };
+                                newLogs.Add(currentEntry);
+                            }
+                        }
+                        else if (currentEntry != null && !string.IsNullOrWhiteSpace(line))
+                        {
+                            // Append to exception if it's not a new structured line
+                            currentEntry.Exception += (string.IsNullOrEmpty(currentEntry.Exception) ? "" : "\n") + line;
+                        }
+                    }
+                    
+                    Logs = newLogs.AsEnumerable().Reverse().Take(200).ToList();
+                }
+            }
+            else
+            {
+                Logs = new List<LogEntry>();
+            }
+        }
+        catch (Exception ex)
+        {
+             Logs = new List<LogEntry> { new LogEntry { Message = $"Error: {ex.Message}", Level = "ERR" } };
+        }
+    }
+    
+    private string GetLogLevelClass(string level)
+    {
+        return level switch
+        {
+            "ERR" or "FAT" => "level-err",
+            "WRN" => "level-wrn",
+            "INF" => "level-inf",
+            "DBG" or "VRB" => "level-dbg",
+            _ => ""
+        };
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

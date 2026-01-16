@@ -7,7 +7,7 @@ using CommandMan.Core.Entities;
 
 namespace CommandMan.Web.Services
 {
-    public class FavoritesService
+    public class FavoritesService : IFavoritesService
     {
         private readonly IJSRuntime _js;
         private List<FavoriteItem> _favorites = new();

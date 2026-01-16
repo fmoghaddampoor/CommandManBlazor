@@ -3,7 +3,7 @@ using CommandMan.Core.Entities;
 
 namespace CommandMan.Web.Services
 {
-    public class ClipboardService
+    public class ClipboardService : IClipboardService
     {
         public List<FileSystemItem> Items { get; private set; } = new();
         public bool IsCut { get; private set; }

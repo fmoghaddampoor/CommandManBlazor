@@ -54,37 +54,63 @@ namespace CommandMan.Infrastructure.Services
                     
                     if (!dirInfo.Exists)
                     {
-                        // Fallback to drives if path invalid?
                         return await GetDrivesAsync();
                     }
 
+                    // Directories
+                    FileSystemInfo[]? fileSystemInfos = null;
                     try 
                     {
                         foreach (var dir in dirInfo.GetDirectories())
                         {
-                            items.Add(new DirectoryItem
+                            try
                             {
-                                Name = dir.Name,
-                                FullPath = dir.FullName,
-                                LastModified = dir.LastWriteTime
-                            });
+                                items.Add(new DirectoryItem
+                                {
+                                    Name = dir.Name,
+                                    FullPath = dir.FullName,
+                                    LastModified = dir.LastWriteTime
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing directory {dir.FullName}: {ex.Message}");
+                            }
                         }
                     }
                     catch (UnauthorizedAccessException) { /* Skip inaccessible dirs */ }
                     catch (Exception ex) { Console.WriteLine($"Error reading dirs in {path}: {ex.Message}"); }
 
+                    // Files
                     try
                     {
                         foreach (var file in dirInfo.GetFiles())
                         {
-                            items.Add(new FileItem
+                            try
                             {
-                                Name = file.Name,
-                                FullPath = file.FullName,
-                                LastModified = file.LastWriteTime,
-                                FileSize = file.Length,
-                                FileVersion = FileVersionInfo.GetVersionInfo(file.FullName).FileVersion ?? string.Empty
-                            });
+                                var fileItem = new FileItem
+                                {
+                                    Name = file.Name,
+                                    FullPath = file.FullName,
+                                    LastModified = file.LastWriteTime,
+                                    FileSize = file.Length
+                                };
+
+                                try
+                                {
+                                    fileItem.FileVersion = FileVersionInfo.GetVersionInfo(file.FullName).FileVersion ?? string.Empty;
+                                }
+                                catch
+                                {
+                                    fileItem.FileVersion = string.Empty;
+                                }
+
+                                items.Add(fileItem);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing file {file.FullName}: {ex.Message}");
+                            }
                         }
                     }
                     catch (UnauthorizedAccessException) { /* Skip inaccessible files */ }
@@ -92,10 +118,10 @@ namespace CommandMan.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
-                    // Handle general permission errors etc.
                     Console.WriteLine($"Error accessing {path}: {ex.Message}");
                 }
 
+                Console.WriteLine($"GetDirectoryContentAsync for {path} returning {items.Count} items");
                 return items;
             });
         }

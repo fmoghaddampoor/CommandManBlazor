@@ -2,8 +2,8 @@
 @using CommandMan.Core.Interfaces
 @using CommandMan.Web.Services
 @inject IFileSystemService FileService
-@inject FavoritesService FavoritesService
-@inject ClipboardService ClipboardService
+@inject IFavoritesService FavoritesService
+@inject IClipboardService ClipboardService
 @inject IJSRuntime JSRuntime
 
 <div class="file-list-container @(isDragOver ? "drag-over" : "")" 

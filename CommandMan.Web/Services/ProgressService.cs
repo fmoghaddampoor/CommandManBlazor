@@ -2,7 +2,7 @@ using System;
 
 namespace CommandMan.Web.Services
 {
-    public class ProgressService
+    public class ProgressService : IProgressService
     {
         public bool IsVisible { get; private set; }
         public string Title { get; private set; } = string.Empty;

@@ -2,7 +2,7 @@ using System;
 
 namespace CommandMan.Web.Services
 {
-    public class AppState
+    public class AppState : IAppState
     {
         public PanelState LeftPanel { get; } = new();
         public PanelState RightPanel { get; } = new();
