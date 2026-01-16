@@ -509,6 +509,8 @@
 
         ContextMenuItems = new List<ContextMenu.MenuAction>
         {
+            new ContextMenu.MenuAction { Label = "Rename", IconClass = "fas fa-edit", Action = () => TriggerAction(ActionType.Rename) },
+            new ContextMenu.MenuAction { IsSeparator = true },
             new ContextMenu.MenuAction { Label = "Copy", IconClass = "fas fa-copy", Action = () => CopyItems() },
             new ContextMenu.MenuAction { Label = "Cut", IconClass = "fas fa-cut", Action = () => CutItems() },
             new ContextMenu.MenuAction { IsSeparator = true },
@@ -612,11 +614,12 @@
         // Let's leave it for now, manual refresh (F5 or navigation) might be needed for source panel.
     }
 
-    private void TriggerAction(ActionType action)
+     private void TriggerAction(ActionType action)
     {
         // Map to F-Keys for Home to handle
          string key = action switch 
          {
+             ActionType.Rename => "F2",
              ActionType.MkDir => "F7",
              ActionType.NewFile => "F9",
              _ => ""
@@ -625,5 +628,5 @@
             _ = JSRuntime.InvokeVoidAsync("eval", $"window.dispatchEvent(new KeyboardEvent('keydown', {{'key': '{key}'}}))");
     }
 
-    private enum ActionType { MkDir, NewFile }
+    private enum ActionType { MkDir, NewFile, Rename }
 }
