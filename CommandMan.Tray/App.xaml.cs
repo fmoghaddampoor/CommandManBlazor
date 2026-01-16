@@ -8,6 +8,9 @@ namespace CommandMan.Tray
     using System.Diagnostics;
     using System.Threading;
     using System.Windows;
+    using CommandMan.Tray.Interfaces;
+    using CommandMan.Tray.Services;
+    using CommandMan.Tray.ViewModels;
 
     /// <summary>
     /// Interaction logic for App.xaml.
@@ -16,6 +19,13 @@ namespace CommandMan.Tray
     {
         private const string MutexName = "{COMMANDMAN-B9A3-4122-8320-TRRAY-INSTANCE}";
         private static Mutex? mutex = null;
+
+        private IServerService? serverService;
+        private ISettingsService? settingsService;
+        private ITrayService? trayService;
+        private MainViewModel? viewModel;
+        private MainWindow? mainWindow;
+        private bool isExplicitExit = false;
 
         /// <summary>
         /// Handles the application startup event.
@@ -102,17 +112,67 @@ namespace CommandMan.Tray
                 return;
             }
 
+            // Continue startup
             base.OnStartup(e);
 
-            // Important: Don't shutdown when main window closes (because we minimize to tray)
+            // Initialize Services
+            this.serverService = new ServerService();
+            this.settingsService = new SettingsService();
+            this.trayService = new TrayService();
+
+            // Initialize ViewModel
+            this.viewModel = new MainViewModel(this.serverService, this.settingsService, url);
+            this.viewModel.RequestShow += (s, ev) => this.ShowWindow();
+            this.viewModel.RequestExit += (s, ev) => this.ExitApp();
+
+            // Initialize Tray
+            this.trayService.Initialize();
+            this.trayService.DoubleClick += (s, ev) => this.ShowWindow();
+            this.trayService.AddMenuItem("Open CommandMan", this.viewModel.OpenCommand);
+            this.trayService.AddMenuItem("Show Control Panel", this.viewModel.ShowCommand);
+            this.trayService.AddSeparator();
+            this.trayService.AddMenuItem("Close", this.viewModel.ExitCommand);
+
+            // Initialize MainWindow
+            this.mainWindow = new MainWindow();
+            this.mainWindow.DataContext = this.viewModel;
+            this.mainWindow.Closing += this.OnMainWindowClosing;
+
+            // Set shutdown mode
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            // Initialize Main Window with URL
-            var window = new MainWindow(url);
+            // Initially hidden (minimizes to tray)
+        }
 
-            // We don't show the window initially if it's just a startup.
-            // BUT, if it's the *first* launch, maybe we want to open the browser? Yes.
-            // window.Show(); // Don't show UI, just start tray logic.
+        private void ShowWindow()
+        {
+            if (this.mainWindow != null)
+            {
+                this.mainWindow.Show();
+                this.mainWindow.Activate();
+                this.mainWindow.WindowState = WindowState.Normal;
+            }
+        }
+
+        private void OnMainWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!this.isExplicitExit)
+            {
+                e.Cancel = true;
+                this.mainWindow?.Hide();
+            }
+        }
+
+        private async void ExitApp()
+        {
+            this.isExplicitExit = true;
+            if (this.serverService != null)
+            {
+                await this.serverService.StopAsync();
+            }
+
+            this.trayService?.Dispose();
+            this.Shutdown();
         }
     }
 }
