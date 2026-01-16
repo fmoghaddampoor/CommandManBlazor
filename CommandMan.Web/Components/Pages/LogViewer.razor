@@ -11,6 +11,7 @@
         <option value="frontend">Frontend</option>
     </select>
     <button @onclick="LoadLogs" class="log-btn refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <button @onclick="ClearLogs" class="log-btn clear-btn"><i class="fas fa-trash-alt"></i> Clear</button>
     <label class="auto-refresh-label">
         <input type="checkbox" @bind="AutoRefresh" /> Auto Refresh (5s)
     </label>
@@ -97,6 +98,8 @@
         border-radius: 4px;
         cursor: pointer;
     }
+    .log-btn.clear-btn { background: #d83b01; }
+    .log-btn.clear-btn:hover { background: #a82a00; }
     .log-btn:hover { background: #005a9e; }
     .auto-refresh-label { font-size: 0.9rem; cursor: pointer; }
     .log-filters { display: flex; gap: 10px; margin-left: auto; font-size: 0.9rem; }
@@ -291,6 +294,38 @@
         catch (Exception ex)
         {
              Logs = new List<LogEntry> { new LogEntry { Message = $"Error: {ex.Message}", Level = "ERR" } };
+        }
+    }
+
+    private void ClearLogs()
+    {
+        try
+        {
+            var logDir = Path.Combine(Env.ContentRootPath, "logs");
+            if (!Directory.Exists(logDir)) return;
+
+            var pattern = $"commandman-{SelectedLogFile}*.log";
+            var files = Directory.GetFiles(logDir, pattern).ToList();
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    using (new FileStream(file, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        // Just opening with FileMode.Truncate clears it
+                    }
+                }
+                catch (IOException)
+                {
+                    // If file is locked or other IO issue, skip or log
+                }
+            }
+            LoadLogs();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error clearing logs: {ex.Message}");
         }
     }
     
